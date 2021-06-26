@@ -2849,7 +2849,7 @@ public:
         } // else if
         else {
           Error temp ;
-          temp.mErrorType == UNBOUND ;
+          temp.mErrorType = UNBOUND ;
           temp.mToken = head->mToken->mToken ;
           
           mErrorVct->push_back( temp ) ;
@@ -4016,7 +4016,7 @@ public:
         } // if ( head->mRightNode->mRightNode->mLeftNode != NULL )
         else {
           Error temp ;
-          temp.mErrorType == NOVALUE ;
+          temp.mErrorType = NOVALUE ;
           temp.binding = head ;
           
           mErrorVct->push_back( temp ) ;
@@ -4041,7 +4041,7 @@ public:
         } // if ( head->mRightNode->mRightNode->mLeftNode != NULL )
         else {
           Error temp ;
-          temp.mErrorType == NOVALUE ;
+          temp.mErrorType = NOVALUE ;
           temp.binding = head ;
           
           mErrorVct->push_back( temp ) ;
