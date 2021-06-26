@@ -136,14 +136,14 @@ public:
   int mLine ;
   int mColumn ;
   string mToken ;
-  CorrespondingTreePtr binding ;
+  CorrespondingTreePtr mBinding ;
     
   Error() { // Constructor
     mErrorType = DEFAULTERROR ;
     mLine = -1 ;
     mColumn = -1 ;
     mToken.clear() ;
-    binding = NULL ;
+    mBinding = NULL ;
         
     return ;
   } // Error()
@@ -1328,7 +1328,7 @@ public:
     
     // an atom but not a symbol ( not a S-Expression )
     if ( head->mToken != NULL && head->mToken->mTokenType != SYMBOL &&
-        Scanner::IsAtom( head->mToken->mTokenType ) ) {
+         Scanner::IsAtom( head->mToken->mTokenType ) ) {
       
       value = head ;
       
@@ -1383,15 +1383,15 @@ public:
         mErrorVct->push_back( temp ) ;
         
         return false ;
-      } //else
+      } // else
       
-    } // esle if
+    } // else if
     // is a main S-expression
     else {
       if ( NonList( head ) ) {
         Error temp ;
         temp.mErrorType = NONLIST ;
-        temp.binding = head ;
+        temp.mBinding = head ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -1413,7 +1413,8 @@ public:
         bool userDefined = false ;
         bool error = false ;
         
-        CorrespondingTreePtr binding = GetBindingAndEval( head->mLeftNode->mToken, userDefined, error, level ) ;
+        CorrespondingTreePtr binding = GetBindingAndEval( head->mLeftNode->mToken,
+                                                          userDefined, error, level ) ;
         TokenPtr func ;
         
         if ( error ) {
@@ -1537,7 +1538,7 @@ public:
             
           } // else if
           else if ( strcmp( func->mToken, "quote" ) == 0 ||
-                    strcmp( func->mToken, "\'" ) == 0)  {
+                    strcmp( func->mToken, "\'" ) == 0 )  {
             if ( CheckFormat( func, head ) ) { // right format
               value = head->mRightNode->mLeftNode ;
               
@@ -1888,7 +1889,7 @@ public:
                   bool error = false ;
                   value = CommandEqv( head->mRightNode->mLeftNode,
                                       head->mRightNode->mRightNode->mLeftNode,
-                                      level , error ) ;
+                                      level, error ) ;
                   if ( error ) {
                     value = NULL ;
                     
@@ -1904,7 +1905,7 @@ public:
                   bool error = false ;
                   value = CommandEqual( head->mRightNode->mLeftNode,
                                         head->mRightNode->mRightNode->mLeftNode,
-                                        level , error ) ;
+                                        level, error ) ;
                   if ( error ) {
                     value = NULL ;
                     
@@ -1966,7 +1967,7 @@ public:
           else { // not a symbol
             Error temp ;
             temp.mErrorType = NONFUNCTION ;
-            temp.binding = binding ;
+            temp.mBinding = binding ;
             
             mErrorVct->push_back( temp ) ;
             
@@ -2057,7 +2058,7 @@ public:
               
             } // else if
             else if ( strcmp( func->mToken, "quote" ) == 0 ||
-                      strcmp( func->mToken, "\'" ) == 0)  {
+                      strcmp( func->mToken, "\'" ) == 0 )  {
               if ( CheckFormat( func, head ) ) { // right format
                 value = head->mRightNode->mLeftNode ;
                 
@@ -2408,7 +2409,7 @@ public:
                     bool error = false ;
                     value = CommandEqv( head->mRightNode->mLeftNode,
                                         head->mRightNode->mRightNode->mLeftNode,
-                                        level , error ) ;
+                                        level, error ) ;
                     if ( error ) {
                       value = NULL ;
                       
@@ -2424,7 +2425,7 @@ public:
                     bool error = false ;
                     value = CommandEqual( head->mRightNode->mLeftNode,
                                           head->mRightNode->mRightNode->mLeftNode,
-                                          level , error ) ;
+                                          level, error ) ;
                     if ( error ) {
                       value = NULL ;
                       
@@ -2476,7 +2477,7 @@ public:
           else {
             Error temp ;
             temp.mErrorType = NONFUNCTION ;
-            temp.binding = value ;
+            temp.mBinding = value ;
             
             mErrorVct->push_back( temp ) ;
             
@@ -2502,6 +2503,7 @@ public:
       
       return true ;
     } // if
+    
     if ( Eval( head->mLeftNode, value, level + 1 ) ) {
       head->mLeftNode = value ;
       value = NULL ;
@@ -2548,7 +2550,7 @@ public:
         Error temp ;
         temp.mErrorType = FORMAT ;
         temp.mToken = head->mLeftNode->mToken->mToken ;
-        temp.binding = head ;
+        temp.mBinding = head ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2567,7 +2569,7 @@ public:
         Error temp ;
         temp.mErrorType = FORMAT ;
         temp.mToken = func->mToken ;
-        temp.binding = head ;
+        temp.mBinding = head ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2761,7 +2763,7 @@ public:
     else if ( head->mToken == NULL ) {
       Error temp ;
       temp.mErrorType = ARGTYPE ;
-      temp.binding = head ;
+      temp.mBinding = head ;
       
       mErrorVct->push_back( temp ) ;
       
@@ -2780,7 +2782,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGTYPE ;
-        temp.binding = head ;
+        temp.mBinding = head ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2792,9 +2794,9 @@ public:
       
       return CheckArgsTypeIsNumber( head->mLeftNode, hasFloat ) &&
              CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ;
-    } //else
+    } // else
     
-  } // CheckTypeIsNumber()
+  } // CheckArgsTypeIsNumber()
   
   bool CheckArgsTypeIsString( CorrespondingTreePtr head ) {
     if ( head == NULL ) {
@@ -2805,7 +2807,7 @@ public:
     else if ( head->mToken == NULL ) {
       Error temp ;
       temp.mErrorType = ARGTYPE ;
-      temp.binding = head ;
+      temp.mBinding = head ;
       
       mErrorVct->push_back( temp ) ;
       
@@ -2819,7 +2821,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGTYPE ;
-        temp.binding = head ;
+        temp.mBinding = head ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2831,9 +2833,9 @@ public:
       
       return CheckArgsTypeIsString( head->mLeftNode ) &&
              CheckArgsTypeIsString( head->mRightNode ) ;
-    } //else
+    } // else
     
-  } // CheckTypeIsString()
+  } // CheckArgsTypeIsString()
   
   bool AllSymbolsAreBound( CorrespondingTreePtr head ) {
     if ( head->mRightNode == NULL ) {
@@ -2870,20 +2872,20 @@ public:
                AllSymbolsAreBound( head->mRightNode ) ) ;
     } // else
     
-  } // AllSymbolAreBound()
+  } // AllSymbolsAreBound()
   
   bool IsBound( TokenPtr symbol ) {
     int len = mSymbolVct->size() ;
     for ( int i = 0 ; i < len ; i++ ) {
       if ( mSymbolVct->at( i ).mSymbol->mToken != NULL &&
            ( strcmp( mSymbolVct->at( i ).mSymbol->mToken->mToken,
-                    symbol->mToken ) == 0 ) ) {
+                     symbol->mToken ) == 0 ) ) {
         
         return true ;
       } // if
       else if ( mSymbolVct->at( i ).mSymbol->mLeftNode->mToken != NULL &&
                 ( strcmp( mSymbolVct->at( i ).mSymbol->mLeftNode->mToken->mToken,
-                        symbol->mToken ) == 0 ) ) {
+                          symbol->mToken ) == 0 ) ) {
         return true ;
       } // else if
       
@@ -2985,7 +2987,7 @@ public:
         else {
           
           return true ;
-        } //
+        } // else
         
       } // else
       
@@ -3036,7 +3038,7 @@ public:
     
   } // Define()
   
-  CorrespondingTreePtr GetBindingAndEval( TokenPtr symbol , bool & userDefined, bool & error, int level ) {
+  CorrespondingTreePtr GetBindingAndEval( TokenPtr symbol, bool & userDefined, bool & error, int level ) {
     int len = mSymbolVct->size() ;
     error = false ;
     
@@ -3115,7 +3117,7 @@ public:
                           symbol->mToken ) == 0 ) {
             
           return mSymbolVct->at( i ).mBinding ;
-        } // else
+        } // else if
         
       } // for
       
@@ -3135,7 +3137,7 @@ public:
     } // if
     else {
       
-      return Cons( head->mLeftNode, CommandList(head->mRightNode) ) ;
+      return Cons( head->mLeftNode, CommandList( head->mRightNode ) ) ;
     } // else
     
   } // CommandList()
@@ -3430,7 +3432,7 @@ public:
       return value ;
     } // else
     
-  } // commandPlus()
+  } // CommandPlus()
   
   int Plus( CorrespondingTreePtr head ) {
     if ( head->mRightNode->mRightNode == NULL ) {
@@ -3477,7 +3479,7 @@ public:
       return value ;
     } // else
     
-  } // commandMinus()
+  } // CommandMinus()
   
   int Minus( CorrespondingTreePtr head ) {
     if ( head->mRightNode->mRightNode == NULL ) {
@@ -3524,7 +3526,7 @@ public:
       return value ;
     } // else
     
-  } // commandMulti()
+  } // CommandMulti()
   
   int Multi( CorrespondingTreePtr head ) {
     if ( head->mRightNode->mRightNode == NULL ) {
@@ -3584,7 +3586,7 @@ public:
              atoi( head->mRightNode->mToken->mToken ) ;
     } // else
     
-  } // Plus()
+  } // Divide()
   
   float DivideF( CorrespondingTreePtr head ) {
     if ( head->mRightNode->mRightNode == NULL ) {
@@ -3597,7 +3599,7 @@ public:
              atof( head->mRightNode->mToken->mToken ) ;
     } // else
     
-  } // PlusF()
+  } // DivideF()
   
   CorrespondingTreePtr CommandNot( CorrespondingTreePtr head ) {
     if ( head->mLeftNode->mToken != NULL ) {
@@ -3763,6 +3765,7 @@ public:
         strcat( value->mToken->mToken, temp ) ;
         delete [] temp ;
       } // if
+      
       strcat( value->mToken->mToken, walk->mLeftNode->mToken->mToken ) ;
       strcat( value->mToken->mToken, "\0" ) ;
     } // while
@@ -3809,7 +3812,8 @@ public:
     
   } // CommandEqvString()
   
-  CorrespondingTreePtr CommandEqv( CorrespondingTreePtr a, CorrespondingTreePtr b, int level, bool & error ) {
+  CorrespondingTreePtr CommandEqv( CorrespondingTreePtr a, CorrespondingTreePtr b,
+                                   int level, bool & error ) {
     if ( SameTree( a, b, true, level, error ) ) {
       CorrespondingTreePtr t = new CorrespondingTree ;
       t->mToken = new Token ;
@@ -3827,7 +3831,8 @@ public:
     
   } // CommandEqv()
   
-  CorrespondingTreePtr CommandEqual( CorrespondingTreePtr a, CorrespondingTreePtr b, int level, bool & error ) {
+  CorrespondingTreePtr CommandEqual( CorrespondingTreePtr a, CorrespondingTreePtr b,
+                                     int level, bool & error ) {
     if ( SameTree( a, b, false, level, error ) ) {
       CorrespondingTreePtr t = new CorrespondingTree ;
       t->mToken = new Token ;
@@ -3843,9 +3848,10 @@ public:
       return nil ;
     } // else
     
-  } // CommandEqv()
+  } // CommandEqual()
   
-  bool SameTree( CorrespondingTreePtr a, CorrespondingTreePtr b, bool needSameAddress, int level, bool & error ) {
+  bool SameTree( CorrespondingTreePtr a, CorrespondingTreePtr b,
+                 bool needSameAddress, int level, bool & error ) {
     if ( SameNode( a, b, needSameAddress, level, error ) ) {
       if ( a->mRightNode == NULL ) {
         
@@ -3865,7 +3871,8 @@ public:
     
   } // SameTree()
   
-  bool SameNode( CorrespondingTreePtr a, CorrespondingTreePtr b, bool needSameAddress, int level, bool & error ) {
+  bool SameNode( CorrespondingTreePtr a, CorrespondingTreePtr b,
+                 bool needSameAddress, int level, bool & error ) {
     if ( a->mToken != NULL ) {
       if ( b->mToken != NULL ) {
         if ( a->mToken->mTokenType == SYMBOL ) {
@@ -3937,7 +3944,7 @@ public:
               return ( a->mToken->mToken == b->mToken->mToken ) ;
             } // else
             
-          } //if
+          } // if
           else {
             
             return false ;
@@ -4017,7 +4024,7 @@ public:
         else {
           Error temp ;
           temp.mErrorType = NOVALUE ;
-          temp.binding = head ;
+          temp.mBinding = head ;
           
           mErrorVct->push_back( temp ) ;
           
@@ -4042,7 +4049,7 @@ public:
         else {
           Error temp ;
           temp.mErrorType = NOVALUE ;
-          temp.binding = head ;
+          temp.mBinding = head ;
           
           mErrorVct->push_back( temp ) ;
           
@@ -4069,7 +4076,7 @@ public:
     while ( walk->mRightNode != NULL && ! found && ! error ) {
       if ( walk->mRightNode->mRightNode == NULL &&
            walk->mLeftNode->mToken != NULL &&
-          ( strcmp( walk->mLeftNode->mToken->mToken, "else" ) == 0 ) ) {
+           ( strcmp( walk->mLeftNode->mToken->mToken, "else" ) == 0 ) ) {
         
         value = CommandBegin( walk->mLeftNode->mRightNode, level, error ) ;
         found = true ;
@@ -4106,7 +4113,7 @@ public:
         error = true ;
         Error temp ;
         temp.mErrorType = NOVALUE ;
-        temp.binding = head ;
+        temp.mBinding = head ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -4377,7 +4384,7 @@ public:
       else if ( mErrorVct->at( i ).mErrorType == NONLIST ) {
         
         cout << "ERROR (non-list) : " ;
-        PrintCorrespondingTree( mErrorVct->at( i ).binding, 0, true ) ;
+        PrintCorrespondingTree( mErrorVct->at( i ).mBinding, 0, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == NONLIST )
       else if ( mErrorVct->at( i ).mErrorType == APPLYNONFUNC ) {
         
@@ -4401,16 +4408,16 @@ public:
       else if ( mErrorVct->at( i ).mErrorType == FORMAT ) {
         
         cout << "ERROR (" ;
-        if ( strcmp( mErrorVct->at( i ).binding->mLeftNode->mToken->mToken,
+        if ( strcmp( mErrorVct->at( i ).mBinding->mLeftNode->mToken->mToken,
                      "define" ) == 0 ) {
           cout << "DEFINE format) : " ;
         } // if
-        else if ( strcmp( mErrorVct->at( i ).binding->mLeftNode->mToken->mToken,
+        else if ( strcmp( mErrorVct->at( i ).mBinding->mLeftNode->mToken->mToken,
                           "cond" ) == 0 ) {
           cout << "COND format) : " ;
         } // else if
         
-        PrintCorrespondingTree( mErrorVct->at( i ).binding, 0, true ) ;
+        PrintCorrespondingTree( mErrorVct->at( i ).mBinding, 0, true ) ;
         
       } // else if ( mErrorVct->at( i ).mErrorType == FORMAT )
       else if ( mErrorVct->at( i ).mErrorType == ARGUMENTS ) {
@@ -4421,7 +4428,7 @@ public:
       else if ( mErrorVct->at( i ).mErrorType == NONFUNCTION ) {
         
         cout << "ERROR (attempt to apply non-function) : " ;
-        PrintCorrespondingTree( mErrorVct->at( i ).binding, 0, true ) ;
+        PrintCorrespondingTree( mErrorVct->at( i ).mBinding, 0, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == NONFUNCTION )
       else if ( mErrorVct->at( i ).mErrorType == ARGTYPE ) {
         
@@ -4431,7 +4438,7 @@ public:
       else if ( mErrorVct->at( i ).mErrorType == NOVALUE ) {
         
         cout << "ERROR (no return value) : " ;
-        PrintCorrespondingTree( mErrorVct->at( i ).binding, 0, true ) ;
+        PrintCorrespondingTree( mErrorVct->at( i ).mBinding, 0, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == NOVALUE )
       else {
         
@@ -4439,15 +4446,11 @@ public:
       } // else
       
     } // for
+    
     mErrorVct->clear() ;
     
     return ;
   } // PrintError()
-  
-  /*
-   UNBOUND, NONLIST, APPLYNONFUNC, LEVEL, FORMAT, ARGUMENTS,
-   NONFUNCTION, ARGTYPE, NOVALUE
-   */
     
 } ; // class parser
 
