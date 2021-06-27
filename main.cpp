@@ -2749,7 +2749,7 @@ public:
     // have arg = 2
     else if ( strcmp( func->mToken, "cons" ) == 0 ||
               strcmp( func->mToken, "eqv?" ) == 0 ||
-              strcmp( func->mToken, "equal?" ) == 0) {
+              strcmp( func->mToken, "equal?" ) == 0 ) {
       if ( head->mRightNode != NULL && head->mRightNode->mRightNode != NULL &&
            head->mRightNode->mRightNode->mRightNode != NULL &&
            head->mRightNode->mRightNode->mRightNode->mToken != NULL &&
@@ -2890,7 +2890,7 @@ public:
   
   bool AllSymbolsAreBound( CorrespondingTreePtr head ) {
     if ( head->mLeftNode != NULL && head->mLeftNode->mToken != NULL &&
-        head->mLeftNode->mToken->mTokenType == QUOTE ) {
+         head->mLeftNode->mToken->mTokenType == QUOTE ) {
       
       return true ;
     } // if
@@ -3502,7 +3502,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
   
     return value ;
   } // Plus()
@@ -3518,7 +3518,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
   
     return value ;
   } // PlusF()
@@ -3556,7 +3556,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
   
     return value ;
   } // Minus()
@@ -3572,7 +3572,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
   
     return value ;
   } // MinusF()
@@ -3610,7 +3610,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
   
     return value ;
   } // Multi()
@@ -3626,7 +3626,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
   
     return value ;
   } // MultiF()
@@ -3669,7 +3669,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
     
     return value ;
   } // Divide()
@@ -3690,7 +3690,7 @@ public:
       } // if
       
       walk = walk->mRightNode ;
-    } // While
+    } // while
   
     return value ;
   } // DivideF()
