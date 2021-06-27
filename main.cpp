@@ -1203,7 +1203,6 @@ public:
     else { // if ( head != NULL )
       
       if ( head->mToken != NULL ) {
-        
         PrintToken( head->mToken, true ) ;
         
         return true ;
@@ -2983,23 +2982,37 @@ public:
               head->mToken != NULL &&
               head->mToken->mTokenType == NIL ) {
       
-      return true ;
+      return false ;
     } // else if
-    else if ( head->mRightNode == NULL ) {
-      if ( head->mToken != NULL ) {
-        if ( head->mToken->mTokenType == INT ) {
+    else if ( head->mRightNode != NULL ) {
+      if ( head->mLeftNode->mToken != NULL ) {
+        if ( head->mLeftNode->mToken->mTokenType == INT ) {
+          if ( head->mRightNode->mRightNode == NULL ) {
+            
+            return true ;
+          } // if
+          else {
+            
+            return CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ;
+          } // else
           
-          return true ;
         } // if
-        else if ( head->mToken->mTokenType == FLOAT ) {
+        else if ( head->mLeftNode->mToken->mTokenType == FLOAT ) {
           hasFloat = true ;
+          if ( head->mRightNode->mRightNode == NULL ) {
+            
+            return true ;
+          } // if
+          else {
+            
+            return CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ;
+          } // else
           
-          return true ;
-        } // else if ( head->mToken->mTokenType == FLOAT )
+        } // else if ( head->mLeftNode->mToken->mTokenType == FLOAT )
         else {
           Error temp ;
           temp.mErrorType = ARGTYPE ;
-          temp.mBinding = head ;
+          temp.mBinding = head->mLeftNode ;
           temp.mTokenPtr = func ;
           
           mErrorVct->push_back( temp ) ;
@@ -3007,18 +3020,28 @@ public:
           return false ;
         } // else
         
-      } // if ( head->mRightNode->mRightNode == NULL )
+      } // if ( head->mLeftNode->mToken != NULL )
       else {
-        cout << "should not be here !(CheckArgsTypeIsNumber)" << endl ;
+        Error temp ;
+        temp.mErrorType = ARGTYPE ;
+        temp.mBinding = head->mLeftNode ;
+        temp.mTokenPtr = func ;
+        
+        mErrorVct->push_back( temp ) ;
         
         return false ;
       } // else
       
-    } // else if
+    } // else if ( head->mRightNode != NULL )
     else {
+      Error temp ;
+      temp.mErrorType = ARGTYPE ;
+      temp.mBinding = head ;
+      temp.mTokenPtr = func ;
       
-      return CheckArgsTypeIsNumber( head->mLeftNode, hasFloat, func ) &&
-             CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ;
+      mErrorVct->push_back( temp ) ;
+      
+      return false ;
     } // else
     
   } // CheckArgsTypeIsNumber()
@@ -3033,13 +3056,20 @@ public:
               head->mToken != NULL &&
               head->mToken->mTokenType == NIL ) {
       
-      return true ;
+      return false ;
     } // else if
-    else if ( head->mRightNode == NULL ) {
-      if ( head->mToken != NULL ) {
-        if ( head->mToken->mTokenType == STRING ) {
+    else if ( head->mRightNode != NULL ) {
+      if ( head->mLeftNode->mToken != NULL ) {
+        if ( head->mLeftNode->mToken->mTokenType == STRING ) {
+          if ( head->mRightNode->mRightNode == NULL ) {
+            
+            return true ;
+          } // if
+          else {
+            
+            return CheckArgsTypeIsString( head->mRightNode, func ) ;
+          } // else
           
-          return true ;
         } // if
         else {
           Error temp ;
@@ -3052,18 +3082,28 @@ public:
           return false ;
         } // else
         
-      } // if ( head->mRightNode->mRightNode == NULL )
+      } // if ( head->mLeftNode->mToken != NULL )
       else {
-        cout << "should not be here !(CheckArgsTypeIsString)" << endl ;
+        Error temp ;
+        temp.mErrorType = ARGTYPE ;
+        temp.mBinding = head->mLeftNode ;
+        temp.mTokenPtr = func ;
+        
+        mErrorVct->push_back( temp ) ;
         
         return false ;
       } // else
       
-    } // else if
+    } // else if ( head->mRightNode != NULL )
     else {
+      Error temp ;
+      temp.mErrorType = ARGTYPE ;
+      temp.mBinding = head ;
+      temp.mTokenPtr = func ;
       
-      return CheckArgsTypeIsString( head->mLeftNode, func ) &&
-             CheckArgsTypeIsString( head->mRightNode, func ) ;
+      mErrorVct->push_back( temp ) ;
+      
+      return false ;
     } // else
     
   } // CheckArgsTypeIsString()
@@ -4797,7 +4837,7 @@ public:
         cout << "ERROR (" ;
         PrintToken( mErrorVct->at( i ).mTokenPtr, false ) ;
         cout << " with incorrect argument type) : " ;
-        PrintToken( mErrorVct->at( i ).mBinding->mToken, true ) ;
+        PrintCorrespondingTree( mErrorVct->at( i ).mBinding, 0, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == ARGTYPE )
       else if ( mErrorVct->at( i ).mErrorType == NOVALUE ) {
         
