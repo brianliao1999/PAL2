@@ -4189,7 +4189,7 @@ public:
       value->mToken->mToken = new char[ len + 1 ] ;
       if ( temp != NULL ) {
         strcat( value->mToken->mToken, temp ) ;
-        delete [] temp ;
+        temp = NULL ;
       } // if
       
       strcat( value->mToken->mToken, walk->mLeftNode->mToken->mToken ) ;
