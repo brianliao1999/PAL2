@@ -2751,23 +2751,7 @@ public:
         while ( walk->mRightNode != NULL ) {
           if ( walk->mLeftNode != NULL && walk->mLeftNode->mRightNode != NULL &&
                walk->mLeftNode->mRightNode->mRightNode != NULL ) {
-            if ( ( walk->mLeftNode->mRightNode->mRightNode->mToken != NULL &&
-                   walk->mLeftNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ||
-                 ( walk->mLeftNode->mRightNode->mRightNode->mRightNode != NULL &&
-                   walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken != NULL &&
-                   walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ) {
-              ;
-            } // if
-            else {
-              Error temp ;
-              temp.mErrorType = FORMAT ;
-              temp.mBinding = head ;
-              
-              mErrorVct->push_back( temp ) ;
-              
-              return false ;
-            } // else
-              
+            ;
           } // if
           else {
             Error temp ;
