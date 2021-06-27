@@ -4223,10 +4223,12 @@ public:
                                    int level, bool & error ) {
     if ( ( a != NULL && a->mToken != NULL &&
            Scanner::IsAtom( a->mToken->mTokenType ) &&
-           a->mToken->mTokenType != SYMBOL ) ||
+           a->mToken->mTokenType != SYMBOL &&
+           a->mToken->mTokenType != STRING ) ||
          ( b != NULL && b->mToken != NULL &&
            Scanner::IsAtom( b->mToken->mTokenType ) &&
-           b->mToken->mTokenType != SYMBOL ) ) {
+           b->mToken->mTokenType != SYMBOL &&
+           b->mToken->mTokenType != STRING ) ) {
       
       if ( SameNode( a, b, false, level, error ) ) {
         CorrespondingTreePtr t = new CorrespondingTree ;
