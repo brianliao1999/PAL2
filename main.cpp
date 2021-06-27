@@ -2621,7 +2621,8 @@ public:
                  walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ||
                ( walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode != NULL &&
                  walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode->mToken != NULL &&
-                 walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ) {
+                 walk->mLeftNode->mRightNode->mRightNode->mRightNode
+                 ->mRightNode->mToken->mTokenType == NIL ) ) {
             ;
           } // if
           else {
