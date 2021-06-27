@@ -78,6 +78,7 @@ public:
   int mLine ;
   int mColumn ;
   TokenPtr mNext ;
+  bool mIsProcedure ;
     
   Token() { // Constructor
     mTokenType = DEFAULTTOKEN ;
@@ -85,6 +86,7 @@ public:
     mLine = -1 ;
     mColumn = -1 ;
     mNext = NULL ;
+    mIsProcedure = false ;
   } // Token()
   
   static void DeleteTokenString( TokenPtr & head ) {
@@ -1264,7 +1266,7 @@ public:
     else if ( token->mTokenType == STRING ) {
       cout << "\"" << token->mToken << "\"" << endl ;
     } // else if
-    else if ( IsPrimitiveFunc( token ) ) {
+    else if ( token->mIsProcedure ) {
       cout << "#<procedure " << token->mToken << ">" << endl ;
     } // else if
     else if ( token->mTokenType != NIL ) {
@@ -3042,6 +3044,8 @@ public:
               strcmp( head->mToken, "if" ) == 0 ||
               strcmp( head->mToken, "cond" ) == 0 ||
               strcmp( head->mToken, "clean-environment" ) == 0 ) {
+      head->mIsProcedure = true ;
+      
       return true ;
     } // else if
     else {
