@@ -3095,6 +3095,7 @@ public:
       for ( int i = 0 ; i < len && ! redefine ; i++  ) {
         if ( strcmp( mSymbolVct->at( i ).mSymbol->mToken->mToken,
                      symbol->mToken->mToken ) == 0 ) {
+          ReplaceSymbol( symbol, mSymbolVct->at( i ).mBinding, binding ) ;
           mSymbolVct->at( i ).mBinding = binding ;
           redefine = true ;
         } // if
@@ -3124,6 +3125,62 @@ public:
     } // else
     
   } // Define()
+  
+  void ReplaceSymbol( CorrespondingTreePtr replacedSymbol,
+                      CorrespondingTreePtr symbolBinding, CorrespondingTreePtr & binding ) {
+    TokenPtr symbol = NULL ;
+    if ( replacedSymbol->mToken != NULL ) {
+      symbol = replacedSymbol->mToken ;
+    } // if
+    else {
+      symbol = replacedSymbol->mLeftNode->mToken ;
+    } // else
+    
+    if ( binding->mToken != NULL &&
+         ( strcmp( binding->mToken->mToken, symbol->mToken ) == 0 ) ) {
+      binding = symbolBinding ;
+      return ;
+    } // if
+    else {
+      
+      Replace( symbol, symbolBinding, binding ) ;
+    } // else
+    
+  } // ReplaceSymbol()
+  
+  void Replace( TokenPtr symbol, CorrespondingTreePtr symbolBinding,
+               CorrespondingTreePtr & head ) {
+    if ( head == NULL ) {
+      
+      return ;
+    } // if
+    else {
+      if ( head->mLeftNode != NULL &&
+           head->mLeftNode->mToken != NULL &&
+           head->mLeftNode->mToken->mToken != NULL &&
+           ( strcmp( head->mLeftNode->mToken->mToken, symbol->mToken ) == 0 ) ) {
+        head->mLeftNode = symbolBinding ;
+      } // if
+      else {
+        
+        Replace( symbol, symbolBinding, head->mLeftNode ) ;
+      } // else
+      
+      if ( head->mRightNode != NULL &&
+           head->mRightNode->mToken != NULL &&
+           head->mRightNode->mToken->mToken != NULL &&
+           ( strcmp( head->mRightNode->mToken->mToken, symbol->mToken ) == 0 ) ) {
+        head->mRightNode = symbolBinding ;
+      } // else if
+      else {
+        
+        Replace( symbol, symbolBinding, head->mRightNode ) ;
+      } // else
+      
+      return ;
+    } // else
+    
+  } // Replace()
   
   CorrespondingTreePtr GetBindingAndEval( TokenPtr symbol, bool & userDefined, bool & error, int level ) {
     int len = mSymbolVct->size() ;
