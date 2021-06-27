@@ -2552,7 +2552,8 @@ public:
   bool EvalArgs( CorrespondingTreePtr head, CorrespondingTreePtr & args, int level ) {
     CorrespondingTreePtr value = NULL ;
     args = new CorrespondingTree ;
-    if ( head->mToken != NULL && head->mToken->mTokenType == NIL ) {
+    if ( head->mToken != NULL ) {
+      args = head ;
       
       return true ;
     } // if
@@ -3169,8 +3170,19 @@ public:
         head->mLeftNode = symbolBinding ;
       } // if
       else {
+        if ( head->mLeftNode != NULL &&
+             head->mLeftNode->mToken != NULL &&
+             head->mLeftNode->mToken->mToken != NULL &&
+             ( strcmp( head->mLeftNode->mToken->mToken, "quote" ) == 0 ||
+               strcmp( head->mLeftNode->mToken->mToken, "\'" ) == 0 ) ) {
+          
+          return ;
+        } // if
+        else {
+          
+          Replace( symbol, symbolBinding, head->mLeftNode ) ;
+        } // else
         
-        Replace( symbol, symbolBinding, head->mLeftNode ) ;
       } // else
       
       if ( head->mRightNode != NULL &&
