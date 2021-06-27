@@ -1617,14 +1617,16 @@ public:
                   value = args ;
                 } // else if
                 else if ( strcmp( func->mToken, "car" ) == 0 )  {
-                  value = CommandCar( args ) ;
-                  if ( value == NULL ) {
+                  bool error = false ;
+                  value = CommandCar( args, error ) ;
+                  if ( error ) {
                     Error temp ;
                     temp.mErrorType = ARGTYPE ;
-                    temp.mBinding = head->mRightNode->mLeftNode ;
+                    temp.mBinding = value ;
                     temp.mToken = func->mToken ;
                     
                     mErrorVct->push_back( temp ) ;
+                    value = NULL ;
                     
                     return false ;
                   } // if
@@ -1635,14 +1637,16 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "cdr" ) == 0 )  {
-                  value = CommandCdr( args ) ;
-                  if ( value == NULL ) {
+                  bool error = false ;
+                  value = CommandCdr( args, error ) ;
+                  if ( error ) {
                     Error temp ;
                     temp.mErrorType = ARGTYPE ;
-                    temp.mBinding = head->mRightNode->mLeftNode ;
+                    temp.mBinding = value ;
                     temp.mToken = func->mToken ;
                     
                     mErrorVct->push_back( temp ) ;
+                    value = NULL ;
                     
                     return false ;
                   } // if
@@ -2193,12 +2197,44 @@ public:
                     value = args ;
                   } // else if
                   else if ( strcmp( func->mToken, "car" ) == 0 )  {
+                    bool error = false ;
+                    value = CommandCar( args, error ) ;
+                    if ( error ) {
+                      Error temp ;
+                      temp.mErrorType = ARGTYPE ;
+                      temp.mBinding = value ;
+                      temp.mToken = func->mToken ;
+                      
+                      mErrorVct->push_back( temp ) ;
+                      value = NULL ;
+                      
+                      return false ;
+                    } // if
+                    else {
+                      
+                      return true ;
+                    } // else
                     
-                    value = CommandCar( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "cdr" ) == 0 )  {
+                    bool error = false ;
+                    value = CommandCdr( args, error ) ;
+                    if ( error ) {
+                      Error temp ;
+                      temp.mErrorType = ARGTYPE ;
+                      temp.mBinding = value ;
+                      temp.mToken = func->mToken ;
+                      
+                      mErrorVct->push_back( temp ) ;
+                      value = NULL ;
+                      
+                      return false ;
+                    } // if
+                    else {
+                      
+                      return true ;
+                    } // else
                     
-                    value = CommandCdr( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "atom?" ) == 0 )  {
                     
@@ -3411,24 +3447,28 @@ public:
     
   } // CommandList()
   
-  CorrespondingTreePtr CommandCar( CorrespondingTreePtr head ) {
+  CorrespondingTreePtr CommandCar( CorrespondingTreePtr head, bool & error ) {
     if ( head->mLeftNode->mToken != NULL ) {
+      error = true ;
       
-      return NULL ;
+      return head->mLeftNode ;
     } // if ( head->mToken != NULL )
     else {
+      error = false ;
       
       return head->mLeftNode->mLeftNode ;
     } // else
     
   } // CommandCar()
   
-  CorrespondingTreePtr CommandCdr( CorrespondingTreePtr head ) {
+  CorrespondingTreePtr CommandCdr( CorrespondingTreePtr head, bool & error ) {
     if ( head->mLeftNode->mToken != NULL ) {
+      error = true ;
       
-      return NULL ;
+      return head->mLeftNode ;
     } // if ( head->mToken != NULL )
     else {
+      error = false ;
       
       return head->mLeftNode->mRightNode ;
     } // else
