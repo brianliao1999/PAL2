@@ -1405,8 +1405,7 @@ public:
     } // else if
     // is a main S-expression
     else {
-      bool error = false ;
-      if ( NonList( head, level, error ) ) {
+      if ( NonList( head ) ) {
         Error temp ;
         temp.mErrorType = NONLIST ;
         temp.mBinding = head ;
@@ -3289,63 +3288,34 @@ public:
     
   } // IsPrimitiveFunc()
   
-  bool NonList( CorrespondingTreePtr head, int level, bool & error ) {
+  bool NonList( CorrespondingTreePtr head ) {
+    CorrespondingTreePtr walk = head ;
     
-    if ( head == NULL ) {
-      cout << "why am I here ?" << endl ;
-      
-      return true ;
-    } // if
-    else if ( head->mLeftNode != NULL && head->mLeftNode->mToken != NULL &&
-              head->mLeftNode->mToken->mTokenType == QUOTE ) {
+    while ( walk->mRightNode != NULL ) {
+      walk = walk->mRightNode ;
+    } // while
+    
+    if ( walk->mToken->mTokenType == NIL ) {
       
       return false ;
-    } // else if
-    else if ( head->mRightNode == NULL ) {
-      if ( head->mToken == NULL ) {
-        cout << "should not be here !(NonList)" << endl ;
+    } // if
+    else if ( walk->mToken->mTokenType == SYMBOL ) {
+      CorrespondingTreePtr value = GetBinding( walk->mToken ) ;
+      
+      if ( value != NULL && value->mToken != NULL &&
+           value->mToken->mTokenType == NIL ) {
+        
+        return false ;
+      } // if
+      else {
         
         return true ;
-      } // if
-      else { // if ( head->mToken != NULL )
-        if ( head->mToken->mTokenType == NIL ) {
-          
-          return false ;
-        } // if
-        else if ( head->mToken->mTokenType == SYMBOL ) {
-          bool temp ;
-          error = false ;
-          CorrespondingTreePtr value = GetBindingAndEval( head->mToken, temp, error, level ) ;
-          if ( error ) {
-            value = NULL ;
-            
-            return true ;
-          } // if
-          else {
-            if ( value != NULL && value->mToken != NULL &&
-                 value->mToken->mTokenType == NIL ) {
-              
-              return false ;
-            } // if
-            else {
-              
-              return true ;
-            } // else
-            
-          } // else
-          
-        } // else if
-        else {
-          
-          return true ;
-        } // else
-        
       } // else
       
     } // else if
-    else { // if ( head->mRightNode != NULL )
+    else {
       
-      return NonList( head->mRightNode, level, error ) ;
+      return true ;
     } // else
     
   } // NonList()
