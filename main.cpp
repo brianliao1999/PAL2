@@ -2939,7 +2939,8 @@ public:
         
         return true ;
       } // if
-      else if ( mSymbolVct->at( i ).mSymbol->mLeftNode->mToken != NULL &&
+      else if ( mSymbolVct->at( i ).mSymbol->mLeftNode != NULL &&
+                mSymbolVct->at( i ).mSymbol->mLeftNode->mToken != NULL &&
                 ( strcmp( mSymbolVct->at( i ).mSymbol->mLeftNode->mToken->mToken,
                           symbol->mToken ) == 0 ) ) {
         return true ;
