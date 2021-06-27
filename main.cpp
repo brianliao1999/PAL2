@@ -5008,7 +5008,10 @@ int main() {
             if ( parser.NotEnd() ) {
               // parser.CheckTree( correspondingTreePtr ) ;
               int space = 0 ;
-              parser.PrintCorrespondingTree( value, space, true ) ; // pretty print
+              if ( inputID != 3 ) {
+                parser.PrintCorrespondingTree( value, space, true ) ; // pretty print
+              } // if
+              
             } // if
             
           } // if
