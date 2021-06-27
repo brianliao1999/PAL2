@@ -2615,6 +2615,36 @@ public:
     else if ( strcmp( func->mToken, "cond" ) == 0 ) {
       CorrespondingTreePtr walk = head->mRightNode ;
       while ( walk->mRightNode->mRightNode != NULL && walk->mLeftNode->mToken == NULL ) {
+        if ( walk->mLeftNode->mRightNode != NULL && walk->mLeftNode->mRightNode->mRightNode != NULL &&
+             walk->mLeftNode->mRightNode->mRightNode->mRightNode != NULL ) {
+          if ( ( walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken != NULL &&
+                 walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ||
+               ( walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode != NULL &&
+                 walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode->mToken != NULL &&
+                 walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ) {
+            ;
+          } // if
+          else {
+            Error temp ;
+            temp.mErrorType = ARGUMENTS ;
+            temp.mToken = func->mToken ;
+            
+            mErrorVct->push_back( temp ) ;
+            
+            return false ;
+          } // else
+            
+        } // if
+        else {
+          Error temp ;
+          temp.mErrorType = ARGUMENTS ;
+          temp.mToken = func->mToken ;
+          
+          mErrorVct->push_back( temp ) ;
+          
+          return false ;
+        } // else
+        
         walk = walk->mRightNode ;
       } // while
       
@@ -2623,7 +2653,7 @@ public:
         temp.mErrorType = FORMAT ;
         temp.mToken = func->mToken ;
         temp.mBinding = head ;
-        
+        //
         mErrorVct->push_back( temp ) ;
         
         return false ;
