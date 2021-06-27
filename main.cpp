@@ -1490,7 +1490,7 @@ public:
             
             return true ;
           } // if
-          else if ( strcmp( func->mToken, "define" ) == 0 )  {
+          else if ( strcmp( func->mToken, "define" ) == 0 && gInputID != 3 )  {
             if ( CheckFormat( func, head ) ) { // right format
               
               return Define( head->mRightNode->mLeftNode,
@@ -2093,7 +2093,7 @@ public:
               
               return false ;
             } // if
-            else if ( strcmp( func->mToken, "define" ) == 0 )  {
+            else if ( strcmp( func->mToken, "define" ) == 0 && gInputID != 3 )  {
               if ( CheckFormat( func, head ) ) { // right format
                 
                 return Define( head->mRightNode->mLeftNode,
@@ -4972,13 +4972,14 @@ public:
 } ; // class parser
 
 // ---       general function  ---
+int gInputID ;
 
 int main() {
     
   Scanner scanner ;
   Parser parser ;
   
-  int inputID ;
+  
   
   bool notEnd = true ;
   bool hasEof = false ;
@@ -4994,7 +4995,7 @@ int main() {
   
   cout << "Welcome to OurScheme!" << endl ;
   
-  cin >> inputID ;
+  cin >> gInputID ;
   
   while ( parser.NotEnd() && ! hasEof ) {    // not exit && not EOF
     cout << endl << "> " ;
@@ -5008,10 +5009,7 @@ int main() {
             if ( parser.NotEnd() ) {
               // parser.CheckTree( correspondingTreePtr ) ;
               int space = 0 ;
-              if ( inputID != 3 ) {
-                parser.PrintCorrespondingTree( value, space, true ) ; // pretty print
-              } // if
-              
+              parser.PrintCorrespondingTree( value, space, true ) ; // pretty print
             } // if
             
           } // if
