@@ -4022,9 +4022,16 @@ public:
           if ( a->mToken->mTokenType == b->mToken->mTokenType ) {
             if ( a->mToken->mToken != NULL ) {
               if ( b->mToken->mToken != NULL ) {
+                if ( needSameAddress && a->mToken->mTokenType == STRING ) {
+                  
+                  return false ;
+                } // if
+                else {
+                  
+                  return ( strcmp( a->mToken->mToken,
+                                   b->mToken->mToken ) == 0 ) ;
+                } // else
                 
-                return ( strcmp( a->mToken->mToken,
-                                 b->mToken->mToken ) == 0 ) ;
               } // if
               else {
                 
@@ -4058,8 +4065,15 @@ public:
         return false ;
       } // if
       else {
-         
-        return  true ;
+        if ( needSameAddress ) {
+          
+          return false ;
+        } // if
+        else {
+          
+          return true ;
+        } // else
+        
       } // else
       
     } // else
