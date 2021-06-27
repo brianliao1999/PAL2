@@ -138,6 +138,7 @@ public:
   int mLine ;
   int mColumn ;
   string mToken ;
+  TokenPtr mTokenPtr ;
   CorrespondingTreePtr mBinding ;
     
   Error() { // Constructor
@@ -146,6 +147,7 @@ public:
     mColumn = -1 ;
     mToken.clear() ;
     mBinding = NULL ;
+    mTokenPtr = NULL ;
         
     return ;
   } // Error()
@@ -1202,7 +1204,7 @@ public:
       
       if ( head->mToken != NULL ) {
         
-        PrintToken( head->mToken ) ;
+        PrintToken( head->mToken, true ) ;
         
         return true ;
       } // if
@@ -1221,7 +1223,7 @@ public:
             PrintSpace( space ) ;
             cout << "." << endl ;
             PrintSpace( space ) ;
-            PrintToken( head->mRightNode->mToken ) ;
+            PrintToken( head->mRightNode->mToken, true ) ;
           } // if
           
         } // if
@@ -1243,35 +1245,49 @@ public:
     
   } // PrintCorrespondingTree()
   
-  void PrintToken( TokenPtr token ) {
+  void PrintToken( TokenPtr token, bool printEnter ) {
+    bool printed = false ;
     
     if ( token->mTokenType == DOT ) {
-      cout << "." << endl ;
+      cout << "." ;
+      printed = true ;
     } // if
     else if ( token->mTokenType == QUOTE ) {
-      cout << "quote" << endl ;
+      cout << "quote" ;
+      printed = true ;
     } // else if
     else if ( token->mTokenType == NIL ) {
-      cout << "nil" << endl ;
+      cout << "nil" ;
+      printed = true ;
     } // if
     else if ( token->mTokenType == T ) {
-      cout << "#t" << endl ;
+      cout << "#t" ;
+      printed = true ;
     } // else if
     else if ( token->mTokenType == INT ) {
-      cout << atoi( token->mToken ) << endl ;
+      cout << atoi( token->mToken ) ;
+      printed = true ;
     } // else if
     else if ( token->mTokenType == FLOAT ) {
-      cout << atof( token->mToken ) << endl ;
+      cout << atof( token->mToken ) ;
+      printed = true ;
     } // else if
     else if ( token->mTokenType == STRING ) {
-      cout << "\"" << token->mToken << "\"" << endl ;
+      cout << "\"" << token->mToken << "\"" ;
+      printed = true ;
     } // else if
     else if ( token->mIsProcedure ) {
-      cout << "#<procedure " << token->mToken << ">" << endl ;
+      cout << "#<procedure " << token->mToken << ">" ;
+      printed = true ;
     } // else if
     else if ( token->mTokenType != NIL ) {
-      cout << token->mToken << endl ;
+      cout << token->mToken ;
+      printed = true ;
     } // else if
+    
+    if ( printed & printEnter ) {
+      cout << endl ;
+    } // if
     
   } // PrintToken()
   
@@ -1376,7 +1392,7 @@ public:
       else { // didn't find the binding, not an internal function , it's an unbound symbol
         Error temp ;
         temp.mErrorType = UNBOUND ;
-        temp.mToken = head->mToken->mToken ;
+        temp.mTokenPtr = head->mToken ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -1400,7 +1416,7 @@ public:
                 Scanner::IsAtom( head->mLeftNode->mToken->mTokenType ) ) {
         Error temp ;
         temp.mErrorType = APPLYNONFUNC ;
-        temp.mToken = head->mLeftNode->mToken->mToken ;
+        temp.mTokenPtr = head->mLeftNode->mToken ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -1426,11 +1442,11 @@ public:
             temp.mErrorType = APPLYNONFUNC ;
             if ( binding->mToken == NULL ) {
               
-              temp.mToken = binding->mLeftNode->mToken->mToken ;
+              temp.mTokenPtr = binding->mLeftNode->mToken ;
             } // if
             else {
               
-              temp.mToken = binding->mToken->mToken ;
+              temp.mTokenPtr = binding->mToken ;
             } // else
             
             mErrorVct->push_back( temp ) ;
@@ -1451,7 +1467,7 @@ public:
                                strcmp( func->mToken, "exit" ) == 0 ) ) {
             Error temp ;
             temp.mErrorType = LEVEL ;
-            temp.mToken = func->mToken ;
+            temp.mTokenPtr = func ;
             
             mErrorVct->push_back( temp ) ;
             
@@ -1623,7 +1639,7 @@ public:
                     Error temp ;
                     temp.mErrorType = ARGTYPE ;
                     temp.mBinding = value ;
-                    temp.mToken = func->mToken ;
+                    temp.mTokenPtr = func ;
                     
                     mErrorVct->push_back( temp ) ;
                     value = NULL ;
@@ -1643,7 +1659,7 @@ public:
                     Error temp ;
                     temp.mErrorType = ARGTYPE ;
                     temp.mBinding = value ;
-                    temp.mToken = func->mToken ;
+                    temp.mTokenPtr = func ;
                     
                     mErrorVct->push_back( temp ) ;
                     value = NULL ;
@@ -2015,7 +2031,7 @@ public:
           if ( head->mLeftNode->mToken == func ) {
             Error temp ;
             temp.mErrorType = UNBOUND ;
-            temp.mToken = head->mLeftNode->mToken->mToken ;
+            temp.mTokenPtr = head->mLeftNode->mToken ;
             
             mErrorVct->push_back( temp ) ;
             
@@ -2043,7 +2059,7 @@ public:
                                  strcmp( func->mToken, "exit" ) == 0 ) ) {
               Error temp ;
               temp.mErrorType = LEVEL ;
-              temp.mToken = func->mToken ;
+              temp.mTokenPtr = func ;
               
               mErrorVct->push_back( temp ) ;
               
@@ -2203,7 +2219,7 @@ public:
                       Error temp ;
                       temp.mErrorType = ARGTYPE ;
                       temp.mBinding = value ;
-                      temp.mToken = func->mToken ;
+                      temp.mTokenPtr = func ;
                       
                       mErrorVct->push_back( temp ) ;
                       value = NULL ;
@@ -2223,7 +2239,7 @@ public:
                       Error temp ;
                       temp.mErrorType = ARGTYPE ;
                       temp.mBinding = value ;
-                      temp.mToken = func->mToken ;
+                      temp.mTokenPtr = func ;
                       
                       mErrorVct->push_back( temp ) ;
                       value = NULL ;
@@ -2665,7 +2681,7 @@ public:
         if ( HasPrimitiveFunc( head->mRightNode->mLeftNode ) ) {
           Error temp ;
           temp.mErrorType = FORMAT ;
-          temp.mToken = func->mToken ;
+          temp.mTokenPtr = func ;
           temp.mBinding = head ;
           
           mErrorVct->push_back( temp ) ;
@@ -2681,7 +2697,7 @@ public:
       else { // wrong format
         Error temp ;
         temp.mErrorType = FORMAT ;
-        temp.mToken = head->mLeftNode->mToken->mToken ;
+        temp.mTokenPtr = head->mLeftNode->mToken ;
         temp.mBinding = head ;
         
         mErrorVct->push_back( temp ) ;
@@ -2707,7 +2723,7 @@ public:
           else {
             Error temp ;
             temp.mErrorType = ARGUMENTS ;
-            temp.mToken = func->mToken ;
+            temp.mTokenPtr = func ;
             
             mErrorVct->push_back( temp ) ;
             
@@ -2718,7 +2734,7 @@ public:
         else {
           Error temp ;
           temp.mErrorType = ARGUMENTS ;
-          temp.mToken = func->mToken ;
+          temp.mTokenPtr = func ;
           
           mErrorVct->push_back( temp ) ;
           
@@ -2731,7 +2747,7 @@ public:
       if ( walk->mRightNode->mRightNode != NULL ) {
         Error temp ;
         temp.mErrorType = FORMAT ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         temp.mBinding = head ;
         //
         mErrorVct->push_back( temp ) ;
@@ -2759,7 +2775,7 @@ public:
         else {
           Error temp ;
           temp.mErrorType = ARGUMENTS ;
-          temp.mToken = func->mToken ;
+          temp.mTokenPtr = func ;
           
           mErrorVct->push_back( temp ) ;
           
@@ -2770,7 +2786,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2789,7 +2805,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2825,7 +2841,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2863,7 +2879,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2885,7 +2901,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2903,7 +2919,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2921,7 +2937,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2941,7 +2957,7 @@ public:
       else {
         Error temp ;
         temp.mErrorType = ARGUMENTS ;
-        temp.mToken = func->mToken ;
+        temp.mTokenPtr = func ;
         
         mErrorVct->push_back( temp ) ;
         
@@ -2984,7 +3000,7 @@ public:
           Error temp ;
           temp.mErrorType = ARGTYPE ;
           temp.mBinding = head ;
-          temp.mToken = func->mToken ;
+          temp.mTokenPtr = func ;
           
           mErrorVct->push_back( temp ) ;
           
@@ -3029,7 +3045,7 @@ public:
           Error temp ;
           temp.mErrorType = ARGTYPE ;
           temp.mBinding = head ;
-          temp.mToken = func->mToken ;
+          temp.mTokenPtr = func ;
           
           mErrorVct->push_back( temp ) ;
           
@@ -3065,7 +3081,7 @@ public:
           if ( strcmp( head->mToken->mToken, "define" ) == 0 ) {
             Error temp ;
             temp.mErrorType = LEVEL ;
-            temp.mToken = head->mToken->mToken ;
+            temp.mTokenPtr = head->mToken ;
             
             mErrorVct->push_back( temp ) ;
             
@@ -3084,7 +3100,7 @@ public:
         else {
           Error temp ;
           temp.mErrorType = UNBOUND ;
-          temp.mToken = head->mToken->mToken ;
+          temp.mTokenPtr = head->mToken ;
           
           mErrorVct->push_back( temp ) ;
           
@@ -4724,7 +4740,8 @@ public:
     for ( int i = 0 ; i < len ; i++ ) {
       if ( mErrorVct->at( i ).mErrorType == UNBOUND ) {
         
-        cout << "ERROR (unbound symbol) : " << mErrorVct->at( i ).mToken << endl ;
+        cout << "ERROR (unbound symbol) : " ;
+        PrintToken( mErrorVct->at( i ).mTokenPtr, true ) ;
       } // if ( mErrorVct->at( i ).mErrorType == UNBOUND )
       else if ( mErrorVct->at( i ).mErrorType == NONLIST ) {
         
@@ -4733,19 +4750,19 @@ public:
       } // else if ( mErrorVct->at( i ).mErrorType == NONLIST )
       else if ( mErrorVct->at( i ).mErrorType == APPLYNONFUNC ) {
         
-        cout << "ERROR (attempt to apply non-function) : "
-             << mErrorVct->at( i ).mToken << endl ;
+        cout << "ERROR (attempt to apply non-function) : " ;
+        PrintToken( mErrorVct->at( i ).mTokenPtr, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == APPLYNONFUNC )
       else if ( mErrorVct->at( i ).mErrorType == LEVEL ) {
         
         cout << "ERROR (level of " ;
-        if ( mErrorVct->at( i ).mToken == "clean-environment" ) {
+        if ( strcmp( mErrorVct->at( i ).mTokenPtr->mToken, "clean-environment" ) == 0 ) {
           cout << "CLEAN-ENVIRONMENT)" << endl ;
         } // if
-        else if ( mErrorVct->at( i ).mToken == "define" ) {
+        else if ( strcmp( mErrorVct->at( i ).mTokenPtr->mToken, "define" ) == 0 ) {
           cout << "DEFINE)" << endl ;
         } // else if
-        else if ( mErrorVct->at( i ).mToken == "exit" ) {
+        else if ( strcmp( mErrorVct->at( i ).mTokenPtr->mToken, "exit" ) == 0 ) {
           cout << "EXIT)" << endl ;
         } // else if
         
@@ -4767,8 +4784,8 @@ public:
       } // else if ( mErrorVct->at( i ).mErrorType == FORMAT )
       else if ( mErrorVct->at( i ).mErrorType == ARGUMENTS ) {
         
-        cout << "ERROR (incorrect number of arguments) : "
-             << mErrorVct->at( i ).mToken << endl ;
+        cout << "ERROR (incorrect number of arguments) : " ;
+        PrintToken( mErrorVct->at( i ).mTokenPtr, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == ARGUMENTS )
       else if ( mErrorVct->at( i ).mErrorType == NONFUNCTION ) {
         
@@ -4778,8 +4795,8 @@ public:
       else if ( mErrorVct->at( i ).mErrorType == ARGTYPE ) {
         
         cout << "ERROR (" << mErrorVct->at( i ).mToken
-             << " with incorrect argument type) : "
-             << mErrorVct->at( i ).mBinding->mToken->mToken << endl ;
+             << " with incorrect argument type) : " ;
+        PrintToken( mErrorVct->at( i ).mBinding->mToken, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == ARGTYPE )
       else if ( mErrorVct->at( i ).mErrorType == NOVALUE ) {
         
