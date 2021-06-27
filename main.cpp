@@ -4221,6 +4221,29 @@ public:
   
   CorrespondingTreePtr CommandEqv( CorrespondingTreePtr a, CorrespondingTreePtr b,
                                    int level, bool & error ) {
+    if ( ( a != NULL && a->mToken != NULL &&
+           Scanner::IsAtom( a->mToken->mTokenType ) &&
+           a->mToken->mTokenType != SYMBOL ) ||
+         ( b != NULL && b->mToken != NULL &&
+           Scanner::IsAtom( b->mToken->mTokenType ) &&
+           b->mToken->mTokenType != SYMBOL ) ) {
+      
+      if ( SameNode( a, b, false, level, error ) ) {
+        CorrespondingTreePtr t = new CorrespondingTree ;
+        t->mToken = new Token ;
+        t->mToken->mTokenType = T ;
+        
+        return t ;
+      } // if
+      else {
+        CorrespondingTreePtr nil = new CorrespondingTree ;
+        nil->mToken = new Token ;
+        nil->mToken->mTokenType = NIL ;
+        
+        return nil ;
+      } // else
+      
+    } // if
     
     CorrespondingTreePtr valueA = NULL ;
     if ( Eval( a, valueA, level ) ) {
