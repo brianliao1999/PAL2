@@ -1461,6 +1461,7 @@ public:
         } // else
         
         if ( IsPrimitiveFunc( func ) ) {
+          func->mIsProcedure = false ;
           if ( level != 0 && ( strcmp( func->mToken, "clean-environment" ) == 0 ||
                                strcmp( func->mToken, "define" ) == 0 ||
                                strcmp( func->mToken, "exit" ) == 0 ) ) {
@@ -1630,6 +1631,7 @@ public:
               // proceed
               CorrespondingTreePtr args = NULL ;
               if ( EvalArgs( head->mRightNode, args, level ) ) {
+                
                 if ( strcmp( func->mToken, "clean-environment" ) == 0 ) {
                   cout << "environment cleaned" << endl ;
                   CleanEnvironment() ;
@@ -2073,6 +2075,7 @@ public:
         if ( Eval( head->mLeftNode, value, level + 1 ) ) {
           if ( value->mToken != NULL && IsPrimitiveFunc( value->mToken ) ) {
             TokenPtr func = value->mToken ;
+            func->mIsProcedure = false ;
             if ( level != 0 && ( strcmp( func->mToken, "clean-environment" ) == 0 ||
                                  strcmp( func->mToken, "define" ) == 0 ||
                                  strcmp( func->mToken, "exit" ) == 0 ) ) {
