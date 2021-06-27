@@ -1356,6 +1356,7 @@ public:
       } // if
       else if ( IsPrimitiveFunc( head->mToken ) ) { // it's an internal function
         value = head ;
+        head->mToken->mIsProcedure = true ;
         
         return true ;
       } // else if
@@ -2589,14 +2590,12 @@ public:
   bool CheckFormat( TokenPtr func, CorrespondingTreePtr head ) {
     // check --"define"
     if ( strcmp( func->mToken, "define" ) == 0 ) {
-      if ( head->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL &&
-           head->mLeftNode != NULL &&
-           ( ( head->mLeftNode->mToken != NULL &&
-               head->mLeftNode->mToken->mTokenType == SYMBOL ) ||
-             ( head->mLeftNode->mToken == NULL &&
-               head->mLeftNode->mLeftNode != NULL &&
-               head->mLeftNode->mLeftNode->mToken != NULL &&
-               head->mLeftNode->mLeftNode->mToken->mTokenType == SYMBOL ) ) ) { // right format
+      if ( head->mRightNode != NULL && head->mRightNode->mLeftNode != NULL &&
+           head->mRightNode->mRightNode != NULL &&
+           head->mRightNode->mRightNode->mLeftNode != NULL &&
+           head->mRightNode->mRightNode->mRightNode != NULL &&
+           head->mRightNode->mLeftNode->mToken != NULL &&
+           head->mRightNode->mLeftNode->mToken->mTokenType == SYMBOL ) { // right format
         
         return ! HasPrimitiveFunc( head->mRightNode->mLeftNode ) ;
       } // if
@@ -3045,7 +3044,6 @@ public:
               strcmp( head->mToken, "if" ) == 0 ||
               strcmp( head->mToken, "cond" ) == 0 ||
               strcmp( head->mToken, "clean-environment" ) == 0 ) {
-      head->mIsProcedure = true ;
       
       return true ;
     } // else if
