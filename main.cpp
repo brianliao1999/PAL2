@@ -1264,6 +1264,9 @@ public:
     else if ( token->mTokenType == STRING ) {
       cout << "\"" << token->mToken << "\"" << endl ;
     } // else if
+    else if ( IsPrimitiveFunc( token ) ) {
+      cout << "#<procedure " << token->mToken << ">" << endl ;
+    } // else if
     else if ( token->mTokenType != NIL ) {
       cout << token->mToken << endl ;
     } // else if
@@ -1350,15 +1353,7 @@ public:
         return true ;
       } // if
       else if ( IsPrimitiveFunc( head->mToken ) ) { // it's an internal function
-        CorrespondingTreePtr temp = new CorrespondingTree ;
-        temp->mToken = head->mToken ;
-        char * tempC = temp->mToken->mToken ;
-        temp->mToken->mToken = new char[ strlen( tempC ) + 14 ] ;
-        strcat( temp->mToken->mToken, "#<procedure " ) ;
-        strcat( temp->mToken->mToken, tempC ) ;
-        strcat( temp->mToken->mToken, ">" ) ;
-       
-        value = temp ;
+        value = head ;
         
         return true ;
       } // else if
@@ -1575,6 +1570,28 @@ public:
             } // else
             
           } // else if
+          else if ( strcmp( func->mToken, "begin" ) == 0 )  {
+            if ( CheckFormat( func, head ) ) { // right format
+              bool error = false ;
+              value = CommandBegin( head->mRightNode, level, error ) ;
+              if ( ! error ) {
+                
+                return true ;
+              } // if
+              else {
+                value = NULL ;
+                
+                return false ;
+              } // else
+              
+            } // if
+            else { // wrong format
+              value = NULL ;
+              
+              return false ;
+            } // else
+            
+          } // else if
           else { // func is a known function
             if ( CheckFormat( func, head ) ) { // right format
               // proceed
@@ -1593,7 +1610,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "list" ) == 0 )  {
                   
-                  value = CommandList( head->mRightNode ) ;
+                  value = head->mRightNode ;
                 } // else if
                 else if ( strcmp( func->mToken, "car" ) == 0 )  {
                   
@@ -1935,20 +1952,6 @@ public:
                   } // else
                   
                 } // else if
-                else if ( strcmp( func->mToken, "begin" ) == 0 )  {
-                  bool error = false ;
-                  value = CommandBegin( head->mRightNode, level, error ) ;
-                  if ( ! error ) {
-                    
-                    return true ;
-                  } // if
-                  else {
-                    value = NULL ;
-                    
-                    return false ;
-                  } // else
-                  
-                } // else if
                 else {
                   cout << "why are you here ? QQ" << endl ;
                   
@@ -2113,6 +2116,28 @@ public:
               } // else
               
             } // else if
+            else if ( strcmp( func->mToken, "begin" ) == 0 )  {
+              if ( CheckFormat( func, head ) ) { // right format
+                bool error = false ;
+                value = CommandBegin( head->mRightNode, level, error ) ;
+                if ( ! error ) {
+                  
+                  return true ;
+                } // if
+                else {
+                  value = NULL ;
+                  
+                  return false ;
+                } // else
+                
+              } // if
+              else { // wrong format
+                value = NULL ;
+                
+                return false ;
+              } // else
+              
+            } // else if
             else { // func is a known function
               if ( CheckFormat( func, head ) ) { // right format
                 // proceed
@@ -2132,7 +2157,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "list" ) == 0 )  {
                     
-                    value = CommandList( head->mRightNode ) ;
+                    value = head->mRightNode ;
                   } // else if
                   else if ( strcmp( func->mToken, "car" ) == 0 )  {
                     
@@ -2474,20 +2499,6 @@ public:
                     } // else
                     
                   } // else if
-                  else if ( strcmp( func->mToken, "begin" ) == 0 )  {
-                    bool error = false ;
-                    value = CommandBegin( head->mRightNode, level, error ) ;
-                    if ( ! error ) {
-                      
-                      return true ;
-                    } // if
-                    else {
-                      value = NULL ;
-                      
-                      return false ;
-                    } // else
-                    
-                  } // else if
                   else {
                     cout << "why are you here ? QQ" << endl ;
                     
@@ -2785,6 +2796,24 @@ public:
       } // else
       
     } // else if ( strcmp( func->mToken, "clean-environment" ) == 0 )
+    // check --"begin"
+    // have arg >= 1
+    else if ( strcmp( func->mToken, "begin" ) == 0 ) {
+      if ( head->mRightNode != NULL && head->mRightNode->mRightNode != NULL ) {
+        
+        return true ;
+      } // if
+      else {
+        Error temp ;
+        temp.mErrorType = ARGUMENTS ;
+        temp.mToken = func->mToken ;
+        
+        mErrorVct->push_back( temp ) ;
+        
+        return false ;
+      } // else
+      
+    } // else if ( strcmp( func->mToken, "begin" ) == 0 )
     else {
       cout << "not defined format." << endl ;
       
@@ -3015,6 +3044,7 @@ public:
     else {
       return false ;
     } // else
+
     
   } // IsPrimitiveFunc()
   
@@ -3105,9 +3135,10 @@ public:
           if ( strcmp( mSymbolVct->at( i ).mSymbol->mToken->mToken, symbol->mToken ) == 0 ) {
             CorrespondingTreePtr value ;
             if ( mSymbolVct->at( i ).mBinding->mToken != NULL &&
+                 ! IsPrimitiveFunc( mSymbolVct->at( i ).mBinding->mToken ) &&
                  mSymbolVct->at( i ).mBinding->mToken->mTokenType == SYMBOL ) {
-              value = GetBindingAndEval( mSymbolVct->at( i ).mBinding->mToken, userDefined, error, level ) ;
               
+              value = GetBindingAndEval( mSymbolVct->at( i ).mBinding->mToken, userDefined, error, level ) ;
               
               return value ;
             } // if
@@ -3724,7 +3755,7 @@ public:
     
   } // CommandNot()
   
-  bool CommandAnd( CorrespondingTreePtr head, CorrespondingTreePtr value, int level ) {
+  bool CommandAnd( CorrespondingTreePtr head, CorrespondingTreePtr & value, int level ) {
     if ( Eval( head->mLeftNode, value, level + 1 ) ) {
       if ( value->mToken != NULL &&
            value->mToken->mTokenType == NIL ) {
@@ -3749,7 +3780,7 @@ public:
     
   } // CommandAnd()
   
-  bool CommandOr( CorrespondingTreePtr head, CorrespondingTreePtr value, int level ) {
+  bool CommandOr( CorrespondingTreePtr head, CorrespondingTreePtr & value, int level ) {
     if ( Eval( head->mLeftNode, value, level + 1 ) ) {
       if ( value->mToken != NULL &&
            value->mToken->mTokenType != NIL ) {
@@ -4083,29 +4114,21 @@ public:
   CorrespondingTreePtr CommandBegin( CorrespondingTreePtr head, int level, bool & error ) {
     CorrespondingTreePtr walk = head ;
     CorrespondingTreePtr value = NULL ;
+    error = false ;
     
-    while ( walk->mRightNode->mRightNode != NULL && ! error ) {
-      error = Eval( walk->mLeftNode, value, level + 1 ) ;
-      
+    while ( walk->mRightNode != NULL && ! error ) {
+      value = NULL ;
+      error = ! Eval( walk->mLeftNode, value, level + 1 ) ;
+      walk = walk->mRightNode ;
     } // while
     
     if ( ! error ) {
-      error = Eval( walk->mLeftNode, value, level + 1 ) ;
-      if ( ! error ) {
-        
-        return value ;
-      } // if
-      else {
-        value = NULL ;
-        
-        return value ;
-      } // else
-      
-    } // if ( ! error )
-    else {
-      value = NULL ;
       
       return value ;
+    } // if ( ! error )
+    else {
+      
+      return NULL ;
     } // else
     
   } // CommandBegin()
@@ -4182,8 +4205,8 @@ public:
     
     while ( walk->mRightNode != NULL && ! found && ! error ) {
       if ( walk->mRightNode->mRightNode == NULL &&
-           walk->mLeftNode->mToken != NULL &&
-           ( strcmp( walk->mLeftNode->mToken->mToken, "else" ) == 0 ) ) {
+           walk->mLeftNode->mLeftNode->mToken != NULL &&
+           ( strcmp( walk->mLeftNode->mLeftNode->mToken->mToken, "else" ) == 0 ) ) {
         
         value = CommandBegin( walk->mLeftNode->mRightNode, level, error ) ;
         found = true ;
@@ -4501,7 +4524,7 @@ public:
       else if ( mErrorVct->at( i ).mErrorType == LEVEL ) {
         
         cout << "ERROR (level of " ;
-        if ( mErrorVct->at( i ).mToken == "clean-environment" == 0 ) {
+        if ( mErrorVct->at( i ).mToken == "clean-environment" ) {
           cout << "CLEAN-ENVIRONMENNT)" << endl ;
         } // if
         else if ( mErrorVct->at( i ).mToken == "define" ) {
@@ -4587,7 +4610,7 @@ int main() {
   
   cin >> inputID ;
   
-  while ( notEnd && ! hasEof && inputID == 1 ) {    // not exit && not EOF
+  while ( notEnd && ! hasEof ) {    // not exit && not EOF
     cout << endl << "> " ;
     
     if ( scanner.ReadSExp( sExpPtr ) ) {
