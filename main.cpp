@@ -3228,7 +3228,7 @@ public:
     } // else if
     else {
       
-      return HasPrimitiveFunc( head->mLeftNode ) || HasPrimitiveFunc( head->mLeftNode ) ;
+      return HasPrimitiveFunc( head->mLeftNode ) || HasPrimitiveFunc( head->mRightNode ) ;
     } // else
     
   } // HasPrimitiveFunc()
