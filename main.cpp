@@ -1499,13 +1499,21 @@ public:
             
           } // else if
           else if ( strcmp( func->mToken, "if" ) == 0 )  {
-            bool error = false ;
-            value = CommandIf( head, level, error ) ;
-            if ( ! error ) {
+            if ( CheckFormat( func, head ) ) { // right format
+              bool error = false ;
+              value = CommandIf( head, level, error ) ;
+              if ( ! error ) {
+                
+                return true ;
+              } // if
+              else {
+                value = NULL ;
+                
+                return false ;
+              } // else
               
-              return true ;
             } // if
-            else {
+            else { // wrong format
               value = NULL ;
               
               return false ;
@@ -1513,16 +1521,23 @@ public:
             
           } // else if
           else if ( strcmp( func->mToken, "cond" ) == 0 )  {
-            bool error = false ;
-            value = CommandCond( head, level, error ) ;
-            if ( error ) {
+            if ( CheckFormat( func, head ) ) { // right format
+              bool error = false ;
+              value = CommandCond( head, level, error ) ;
+              if ( error ) {
+                value = NULL ;
+                
+                return false ;
+              } // if
+              else {
+                
+                return true ;
+              } // else
+            } // if
+            else { // wrong format
               value = NULL ;
               
               return false ;
-            } // if
-            else {
-              
-              return true ;
             } // else
             
           } // else if
@@ -2083,13 +2098,20 @@ public:
               
             } // else if
             else if ( strcmp( func->mToken, "if" ) == 0 )  {
-              bool error = false ;
-              value = CommandIf( head, level, error ) ;
-              if ( ! error ) {
-                
-                return true ;
+              if ( CheckFormat( func, head ) ) { // right format
+                bool error = false ;
+                value = CommandIf( head, level, error ) ;
+                if ( ! error ) {
+                  
+                  return true ;
+                } // if
+                else {
+                  value = NULL ;
+                  
+                  return false ;
+                } // else
               } // if
-              else {
+              else { // wrong format
                 value = NULL ;
                 
                 return false ;
@@ -2097,16 +2119,23 @@ public:
               
             } // else if
             else if ( strcmp( func->mToken, "cond" ) == 0 )  {
-              bool error = false ;
-              value = CommandCond( head, level, error ) ;
-              if ( error ) {
+              if ( CheckFormat( func, head ) ) { // right format
+                bool error = false ;
+                value = CommandCond( head, level, error ) ;
+                if ( error ) {
+                  value = NULL ;
+                  
+                  return false ;
+                } // if
+                else {
+                  
+                  return true ;
+                } // else
+              } // if
+              else { // wrong format
                 value = NULL ;
                 
                 return false ;
-              } // if
-              else {
-                
-                return true ;
               } // else
               
             } // else if
@@ -2713,54 +2742,56 @@ public:
     // check --"cond"
     else if ( strcmp( func->mToken, "cond" ) == 0 ) {
       CorrespondingTreePtr walk = head->mRightNode ;
-      while ( walk->mRightNode->mRightNode != NULL && walk->mLeftNode->mToken == NULL ) {
-        if ( walk->mLeftNode->mRightNode != NULL && walk->mLeftNode->mRightNode->mRightNode != NULL &&
-             walk->mLeftNode->mRightNode->mRightNode->mRightNode != NULL ) {
-          if ( ( walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken != NULL &&
-                 walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ||
-               ( walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode != NULL &&
-                 walk->mLeftNode->mRightNode->mRightNode->mRightNode->mRightNode->mToken != NULL &&
-                 walk->mLeftNode->mRightNode->mRightNode->mRightNode
-                 ->mRightNode->mToken->mTokenType == NIL ) ) {
-            ;
+      
+      if ( head != NULL && head->mRightNode != NULL &&
+           head->mRightNode->mLeftNode != NULL  &&
+           head->mRightNode->mLeftNode->mToken == NULL &&
+           head->mRightNode->mRightNode != NULL ) {
+        
+        while ( walk->mRightNode != NULL ) {
+          if ( walk->mLeftNode != NULL && walk->mLeftNode->mRightNode != NULL &&
+               walk->mLeftNode->mRightNode->mRightNode != NULL ) {
+            if ( ( walk->mLeftNode->mRightNode->mRightNode->mToken != NULL &&
+                   walk->mLeftNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ||
+                 ( walk->mLeftNode->mRightNode->mRightNode->mRightNode != NULL &&
+                   walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken != NULL &&
+                   walk->mLeftNode->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL ) ) {
+              ;
+            } // if
+            else {
+              Error temp ;
+              temp.mErrorType = FORMAT ;
+              temp.mBinding = head ;
+              
+              mErrorVct->push_back( temp ) ;
+              
+              return false ;
+            } // else
+              
           } // if
           else {
             Error temp ;
-            temp.mErrorType = ARGUMENTS ;
-            temp.mTokenPtr = func ;
+            temp.mErrorType = FORMAT ;
+            temp.mBinding = head ;
             
             mErrorVct->push_back( temp ) ;
             
             return false ;
           } // else
-            
-        } // if
-        else {
-          Error temp ;
-          temp.mErrorType = ARGUMENTS ;
-          temp.mTokenPtr = func ;
           
-          mErrorVct->push_back( temp ) ;
-          
-          return false ;
-        } // else
+          walk = walk->mRightNode ;
+        } // while
         
-        walk = walk->mRightNode ;
-      } // while
-      
-      if ( walk->mRightNode->mRightNode != NULL ) {
+        return true ;
+      } // if
+      else {
         Error temp ;
         temp.mErrorType = FORMAT ;
-        temp.mTokenPtr = func ;
         temp.mBinding = head ;
-        //
+        
         mErrorVct->push_back( temp ) ;
         
         return false ;
-      } // if
-      else {
-        
-        return true ;
       } // else
       
     } // else if
@@ -4488,6 +4519,7 @@ public:
           
         } // if ( head->mRightNode->mRightNode->mLeftNode != NULL )
         else {
+          error = true ;
           Error temp ;
           temp.mErrorType = NOVALUE ;
           temp.mBinding = head ;
@@ -4513,6 +4545,7 @@ public:
           
         } // if ( head->mRightNode->mRightNode->mLeftNode != NULL )
         else {
+          error = true ;
           Error temp ;
           temp.mErrorType = NOVALUE ;
           temp.mBinding = head ;
