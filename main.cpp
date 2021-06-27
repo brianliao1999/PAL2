@@ -47,7 +47,7 @@ enum TokenType { LEFTPAREN, RIGHTPAREN, INT, STRING, DOT, FLOAT,
 // A type of Error.
 enum ErrorType { HASEOF, EXPECTRIGHT, EXPECTLEFT, NOCLOSE, OTHERS, DEFAULTERROR,
                  UNBOUND, NONLIST, APPLYNONFUNC, LEVEL, FORMAT, ARGUMENTS,
-                 NONFUNCTION, ARGTYPE, NOVALUE
+                 NONFUNCTION, ARGTYPE, NOVALUE, DIVIDEBYZERO
 } ;
 
 
@@ -1551,6 +1551,30 @@ public:
             } // else
             
           } // else if
+          else if ( strcmp( func->mToken, "eqv?" ) == 0 )  {
+            if ( CheckFormat( func, head ) ) { // right format
+              bool error = false ;
+              value = CommandEqv( head->mRightNode->mLeftNode,
+                                  head->mRightNode->mRightNode->mLeftNode,
+                                  level, error ) ;
+              if ( error ) {
+                value = NULL ;
+                
+                return false ;
+              } // if
+              else {
+                
+                return  true ;
+              } // else
+              
+            } // if
+            else { // wrong format
+              value = NULL ;
+              
+              return false ;
+            } // else
+            
+          } // else if
           else { // func is a known function
             if ( CheckFormat( func, head ) ) { // right format
               // proceed
@@ -1618,7 +1642,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "+" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     value = CommandPlus( head->mRightNode, hasFloat ) ;
                     
                     return true ;
@@ -1632,7 +1656,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "-" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     value = CommandMinus( head->mRightNode, hasFloat ) ;
                     
                     return true ;
@@ -1646,7 +1670,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "*" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     value = CommandMulti( head->mRightNode, hasFloat ) ;
                     
                     return true ;
@@ -1660,10 +1684,19 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "/" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
-                    value = CommandDivide( head->mRightNode, hasFloat ) ;
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
+                    bool error = false ;
+                    value = CommandDivide( head->mRightNode, hasFloat, error ) ;
+                    if ( error ) {
+                      value = NULL ;
+                      
+                      return false ;
+                    } // if
+                    else {
+                      
+                      return true ;
+                    } // else
                     
-                    return true ;
                   } // if
                   else {
                     value = NULL ;
@@ -1673,12 +1706,13 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "not" ) == 0 )  {
+                  value = CommandNot( head->mRightNode ) ;
                   
-                  return CommandNot( head->mRightNode ) ;
+                  return true ;
                 } // else if
                 else if ( strcmp( func->mToken, ">" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     if ( CommandBiggerNum( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1703,7 +1737,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, ">=" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     if ( CommandBiggerEqvNum( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1728,7 +1762,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "<" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     if ( CommandSmallerNum( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1753,7 +1787,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "<=" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     if ( CommandSmallerEqvNum( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1778,7 +1812,7 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "=" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                     if ( CommandEqvNum( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1802,7 +1836,7 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string-append" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                     value = CommandStringAppend( head->mRightNode ) ;
                     
                     return true ;
@@ -1814,7 +1848,7 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string>?" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                     if ( CommandBiggerString( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1838,7 +1872,7 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string<?" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                     if ( CommandSmallerString( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1862,7 +1896,7 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string=?" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                     if ( CommandEqvString( head->mRightNode ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
@@ -1882,22 +1916,6 @@ public:
                     value = NULL ;
                     
                     return false ;
-                  } // else
-                  
-                } // else if
-                else if ( strcmp( func->mToken, "eqv?" ) == 0 )  {
-                  bool error = false ;
-                  value = CommandEqv( head->mRightNode->mLeftNode,
-                                      head->mRightNode->mRightNode->mLeftNode,
-                                      level, error ) ;
-                  if ( error ) {
-                    value = NULL ;
-                    
-                    return false ;
-                  } // if
-                  else {
-                    
-                    return  true ;
                   } // else
                   
                 } // else if
@@ -2071,6 +2089,30 @@ public:
               } // else
               
             } // else if
+            else if ( strcmp( func->mToken, "eqv?" ) == 0 )  {
+              if ( CheckFormat( func, head ) ) { // right format
+                bool error = false ;
+                value = CommandEqv( head->mRightNode->mLeftNode,
+                                    head->mRightNode->mRightNode->mLeftNode,
+                                    level, error ) ;
+                if ( error ) {
+                  value = NULL ;
+                  
+                  return false ;
+                } // if
+                else {
+                  
+                  return  true ;
+                } // else
+                
+              } // if
+              else { // wrong format
+                value = NULL ;
+                
+                return false ;
+              } // else
+              
+            } // else if
             else { // func is a known function
               if ( CheckFormat( func, head ) ) { // right format
                 // proceed
@@ -2085,7 +2127,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "cons" ) == 0 )  {
                     
-                    Cons( head->mRightNode->mLeftNode, head->mRightNode->mRightNode->mLeftNode ) ;
+                    value = Cons( head->mRightNode->mLeftNode,
+                                  head->mRightNode->mRightNode->mLeftNode ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "list" ) == 0 )  {
                     
@@ -2138,7 +2181,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "+" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       value = CommandPlus( head->mRightNode, hasFloat ) ;
                       
                       return true ;
@@ -2152,7 +2195,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "-" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       value = CommandMinus( head->mRightNode, hasFloat ) ;
                       
                       return true ;
@@ -2166,7 +2209,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "*" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       value = CommandMulti( head->mRightNode, hasFloat ) ;
                       
                       return true ;
@@ -2180,10 +2223,19 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "/" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
-                      value = CommandDivide( head->mRightNode, hasFloat ) ;
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
+                      bool error = false ;
+                      value = CommandDivide( head->mRightNode, hasFloat, error ) ;
+                      if ( error ) {
+                        value = NULL ;
+                        
+                        return false ;
+                      } // if
+                      else {
+                        
+                        return true ;
+                      } // else
                       
-                      return true ;
                     } // if
                     else {
                       value = NULL ;
@@ -2193,12 +2245,13 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "not" ) == 0 )  {
+                    value = CommandNot( head->mRightNode ) ;
                     
-                    return CommandNot( head->mRightNode ) ;
+                    return true ;
                   } // else if
                   else if ( strcmp( func->mToken, ">" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       if ( CommandBiggerNum( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2223,7 +2276,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, ">=" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       if ( CommandBiggerEqvNum( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2248,7 +2301,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "<" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       if ( CommandSmallerNum( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2273,7 +2326,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "<=" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       if ( CommandSmallerEqvNum( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2298,7 +2351,7 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "=" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ) {
+                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
                       if ( CommandEqvNum( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2322,7 +2375,7 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string-append" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                       value = CommandStringAppend( head->mRightNode ) ;
                       
                       return true ;
@@ -2334,7 +2387,7 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string>?" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                       if ( CommandBiggerString( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2358,7 +2411,7 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string<?" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                       if ( CommandSmallerString( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2382,7 +2435,7 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string=?" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
                       if ( CommandEqvString( head->mRightNode ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
@@ -2402,22 +2455,6 @@ public:
                       value = NULL ;
                       
                       return false ;
-                    } // else
-                    
-                  } // else if
-                  else if ( strcmp( func->mToken, "eqv?" ) == 0 )  {
-                    bool error = false ;
-                    value = CommandEqv( head->mRightNode->mLeftNode,
-                                        head->mRightNode->mRightNode->mLeftNode,
-                                        level, error ) ;
-                    if ( error ) {
-                      value = NULL ;
-                      
-                      return false ;
-                    } // if
-                    else {
-                      
-                      return  true ;
                     } // else
                     
                   } // else if
@@ -2710,7 +2747,9 @@ public:
     } // else if
     // check --"cons"
     // have arg = 2
-    else if ( strcmp( func->mToken, "cons" ) == 0 ) {
+    else if ( strcmp( func->mToken, "cons" ) == 0 ||
+              strcmp( func->mToken, "eqv?" ) == 0 ||
+              strcmp( func->mToken, "equal?" ) == 0) {
       if ( head->mRightNode != NULL && head->mRightNode->mRightNode != NULL &&
            head->mRightNode->mRightNode->mRightNode != NULL &&
            head->mRightNode->mRightNode->mRightNode->mToken != NULL &&
@@ -2754,37 +2793,43 @@ public:
     
   } // CheckFormat()
   
-  bool CheckArgsTypeIsNumber( CorrespondingTreePtr head, bool & hasFloat ) {
+  bool CheckArgsTypeIsNumber( CorrespondingTreePtr head, bool & hasFloat, TokenPtr func ) {
     if ( head == NULL ) {
-      cout << "should not be here !" << endl ;
+      cout << "should not be here !(CheckArgsTypeIsNumber)" << endl ;
       
       return false ;
     } // if
-    else if ( head->mToken == NULL ) {
-      Error temp ;
-      temp.mErrorType = ARGTYPE ;
-      temp.mBinding = head ;
+    else if ( head->mRightNode == NULL &&
+              head->mToken != NULL &&
+              head->mToken->mTokenType == NIL ) {
       
-      mErrorVct->push_back( temp ) ;
-      
-      return false ;
+      return true ;
     } // else if
     else if ( head->mRightNode == NULL ) {
-      if ( head->mToken->mTokenType == INT ) {
+      if ( head->mToken != NULL ) {
+        if ( head->mToken->mTokenType == INT ) {
+          
+          return true ;
+        } // if
+        else if ( head->mToken->mTokenType == FLOAT ) {
+          hasFloat = true ;
+          
+          return true ;
+        } // else if ( head->mToken->mTokenType == FLOAT )
+        else {
+          Error temp ;
+          temp.mErrorType = ARGTYPE ;
+          temp.mBinding = head ;
+          temp.mToken = func->mToken ;
+          
+          mErrorVct->push_back( temp ) ;
+          
+          return false ;
+        } // else
         
-        return true ;
-      } // if
-      else if ( head->mToken->mTokenType == FLOAT ) {
-        hasFloat = true ;
-        
-        return true ;
-      } // else if ( head->mToken->mTokenType == FLOAT )
+      } // if ( head->mRightNode->mRightNode == NULL )
       else {
-        Error temp ;
-        temp.mErrorType = ARGTYPE ;
-        temp.mBinding = head ;
-        
-        mErrorVct->push_back( temp ) ;
+        cout << "should not be here !(CheckArgsTypeIsNumber)" << endl ;
         
         return false ;
       } // else
@@ -2792,38 +2837,44 @@ public:
     } // else if
     else {
       
-      return CheckArgsTypeIsNumber( head->mLeftNode, hasFloat ) &&
-             CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) ;
+      return CheckArgsTypeIsNumber( head->mLeftNode, hasFloat, func ) &&
+             CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ;
     } // else
     
   } // CheckArgsTypeIsNumber()
   
-  bool CheckArgsTypeIsString( CorrespondingTreePtr head ) {
+  bool CheckArgsTypeIsString( CorrespondingTreePtr head, TokenPtr func ) {
     if ( head == NULL ) {
-      cout << "should not be here !" << endl ;
+      cout << "should not be here !(CheckArgsTypeIsString)" << endl ;
       
       return false ;
     } // if
-    else if ( head->mToken == NULL ) {
-      Error temp ;
-      temp.mErrorType = ARGTYPE ;
-      temp.mBinding = head ;
+    else if ( head->mRightNode == NULL &&
+              head->mToken != NULL &&
+              head->mToken->mTokenType == NIL ) {
       
-      mErrorVct->push_back( temp ) ;
-      
-      return false ;
+      return true ;
     } // else if
     else if ( head->mRightNode == NULL ) {
-      if ( head->mToken->mTokenType == STRING ) {
+      if ( head->mToken != NULL ) {
+        if ( head->mToken->mTokenType == STRING ) {
+          
+          return true ;
+        } // if
+        else {
+          Error temp ;
+          temp.mErrorType = ARGTYPE ;
+          temp.mBinding = head ;
+          temp.mToken = func->mToken ;
+          
+          mErrorVct->push_back( temp ) ;
+          
+          return false ;
+        } // else
         
-        return true ;
-      } // if
+      } // if ( head->mRightNode->mRightNode == NULL )
       else {
-        Error temp ;
-        temp.mErrorType = ARGTYPE ;
-        temp.mBinding = head ;
-        
-        mErrorVct->push_back( temp ) ;
+        cout << "should not be here !(CheckArgsTypeIsString)" << endl ;
         
         return false ;
       } // else
@@ -2831,14 +2882,19 @@ public:
     } // else if
     else {
       
-      return CheckArgsTypeIsString( head->mLeftNode ) &&
-             CheckArgsTypeIsString( head->mRightNode ) ;
+      return CheckArgsTypeIsString( head->mLeftNode, func ) &&
+             CheckArgsTypeIsString( head->mRightNode, func ) ;
     } // else
     
   } // CheckArgsTypeIsString()
   
   bool AllSymbolsAreBound( CorrespondingTreePtr head ) {
-    if ( head->mRightNode == NULL ) {
+    if ( head->mLeftNode != NULL && head->mLeftNode->mToken != NULL &&
+        head->mLeftNode->mToken->mTokenType == QUOTE ) {
+      
+      return true ;
+    } // if
+    else if ( head->mRightNode == NULL ) {
       if ( head->mToken != NULL &&
            head->mToken->mTokenType == SYMBOL ) {
         if ( IsPrimitiveFunc( head->mToken ) ) {
@@ -2865,7 +2921,7 @@ public:
         return true ;
       } // else
       
-    } // if
+    } // else if
     else {
       
       return ( AllSymbolsAreBound( head->mLeftNode ) &&
@@ -3416,10 +3472,11 @@ public:
   CorrespondingTreePtr CommandPlus( CorrespondingTreePtr head, bool hasFloat ) {
     CorrespondingTreePtr value = new CorrespondingTree ;
     value->mToken = new Token ;
+    value->mToken->mToken = new char[20] ;
     
     if ( hasFloat ) {
       float num = PlusF( head ) ;
-      sprintf( value->mToken->mToken, "%f", num ) ;
+      sprintf( value->mToken->mToken, "%.3f", num ) ;
       value->mToken->mTokenType = FLOAT ;
       
       return value ;
@@ -3435,38 +3492,45 @@ public:
   } // CommandPlus()
   
   int Plus( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atoi( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atoi( head->mLeftNode->mToken->mToken ) +
-             atoi( head->mRightNode->mToken->mToken ) ;
-    } // else
+    CorrespondingTreePtr walk = head->mRightNode ;
+    float value = atoi( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL ) {
+      if ( walk->mToken == NULL ) {
+        
+        value = value + atoi( walk->mLeftNode->mToken->mToken ) ;
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+  
+    return value ;
   } // Plus()
   
   float PlusF( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atof( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atof( head->mLeftNode->mToken->mToken ) +
-             atof( head->mRightNode->mToken->mToken ) ;
-    } // else
+    CorrespondingTreePtr walk = head->mRightNode ;
+    float value = atof( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL ) {
+      if ( walk->mToken == NULL ) {
+        
+        value = value + atof( walk->mLeftNode->mToken->mToken ) ;
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+  
+    return value ;
   } // PlusF()
   
   CorrespondingTreePtr CommandMinus( CorrespondingTreePtr head, bool hasFloat ) {
     CorrespondingTreePtr value = new CorrespondingTree ;
     value->mToken = new Token ;
+    value->mToken->mToken = new char[20] ;
     
     if ( hasFloat ) {
       float num = MinusF( head ) ;
-      sprintf( value->mToken->mToken, "%f", num ) ;
+      sprintf( value->mToken->mToken, "%.3f", num ) ;
       value->mToken->mTokenType = FLOAT ;
       
       return value ;
@@ -3482,38 +3546,45 @@ public:
   } // CommandMinus()
   
   int Minus( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atoi( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atoi( head->mLeftNode->mToken->mToken ) -
-             atoi( head->mRightNode->mToken->mToken ) ;
-    } // else
+    CorrespondingTreePtr walk = head->mRightNode ;
+    int value = atoi( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL ) {
+      if ( walk->mToken == NULL ) {
+        
+        value = value - atoi( walk->mLeftNode->mToken->mToken ) ;
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+  
+    return value ;
   } // Minus()
   
   float MinusF( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atof( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atof( head->mLeftNode->mToken->mToken ) -
-             atof( head->mRightNode->mToken->mToken ) ;
-    } // else
+    CorrespondingTreePtr walk = head->mRightNode ;
+    float value = atof( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL ) {
+      if ( walk->mToken == NULL ) {
+        
+        value = value - atof( walk->mLeftNode->mToken->mToken ) ;
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+  
+    return value ;
   } // MinusF()
   
   CorrespondingTreePtr CommandMulti( CorrespondingTreePtr head, bool hasFloat ) {
     CorrespondingTreePtr value = new CorrespondingTree ;
     value->mToken = new Token ;
+    value->mToken->mToken = new char[20] ;
     
     if ( hasFloat ) {
       float num = MultiF( head ) ;
-      sprintf( value->mToken->mToken, "%f", num ) ;
+      sprintf( value->mToken->mToken, "%.3f", num ) ;
       value->mToken->mTokenType = FLOAT ;
       
       return value ;
@@ -3529,44 +3600,51 @@ public:
   } // CommandMulti()
   
   int Multi( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atoi( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atoi( head->mLeftNode->mToken->mToken ) *
-             atoi( head->mRightNode->mToken->mToken ) ;
-    } // else
+    CorrespondingTreePtr walk = head->mRightNode ;
+    int value = atoi( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL ) {
+      if ( walk->mToken == NULL ) {
+        
+        value = value * atoi( walk->mLeftNode->mToken->mToken ) ;
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+  
+    return value ;
   } // Multi()
   
   float MultiF( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atof( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atof( head->mLeftNode->mToken->mToken ) *
-             atof( head->mRightNode->mToken->mToken ) ;
-    } // else
+    CorrespondingTreePtr walk = head->mRightNode ;
+    float value = atof( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL ) {
+      if ( walk->mToken == NULL ) {
+        
+        value = value * atof( walk->mLeftNode->mToken->mToken ) ;
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+  
+    return value ;
   } // MultiF()
   
-  CorrespondingTreePtr CommandDivide( CorrespondingTreePtr head, bool hasFloat ) {
+  CorrespondingTreePtr CommandDivide( CorrespondingTreePtr head, bool hasFloat, bool & error ) {
     CorrespondingTreePtr value = new CorrespondingTree ;
     value->mToken = new Token ;
+    value->mToken->mToken = new char[20] ;
     
     if ( hasFloat ) {
-      float num = DivideF( head ) ;
-      sprintf( value->mToken->mToken, "%f", num ) ;
+      float num = DivideF( head, error ) ;
+      sprintf( value->mToken->mToken, "%.3f", num ) ;
       value->mToken->mTokenType = FLOAT ;
       
       return value ;
     } // if ( hasFloat )
     else {
-      int num = Divide( head ) ;
+      int num = Divide( head, error ) ;
       sprintf( value->mToken->mToken, "%d", num ) ;
       value->mToken->mTokenType = INT ;
       
@@ -3575,30 +3653,46 @@ public:
     
   } // CommandDivide()
   
-  int Divide( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atoi( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atoi( head->mLeftNode->mToken->mToken ) /
-             atoi( head->mRightNode->mToken->mToken ) ;
-    } // else
+  int Divide( CorrespondingTreePtr head, bool & hasZero ) {
+    CorrespondingTreePtr walk = head->mRightNode ;
+    float value = atoi( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL && ! hasZero ) {
+      if ( walk->mToken == NULL ) {
+        if ( strcmp( walk->mLeftNode->mToken->mToken, "0" ) == 0 ) {
+          hasZero = true ;
+        } // if
+        else {
+          value = value / atoi( walk->mLeftNode->mToken->mToken ) ;
+        } // else
+        
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+    
+    return value ;
   } // Divide()
   
-  float DivideF( CorrespondingTreePtr head ) {
-    if ( head->mRightNode->mRightNode == NULL ) {
-      
-      return atof( head->mToken->mToken ) ;
-    } // if ( head->mRightNode == NULL )
-    else {
-      
-      return atof( head->mLeftNode->mToken->mToken ) /
-             atof( head->mRightNode->mToken->mToken ) ;
-    } // else
+  float DivideF( CorrespondingTreePtr head, bool & hasZero ) {
+    CorrespondingTreePtr walk = head->mRightNode ;
+    float value = atof( head->mLeftNode->mToken->mToken ) ;
     
+    while ( walk->mRightNode != NULL ) {
+      if ( walk->mToken == NULL ) {
+        if ( strcmp( walk->mLeftNode->mToken->mToken, "0" ) == 0 ) {
+          hasZero = true ;
+        } // if
+        else {
+          value = value / atof( walk->mLeftNode->mToken->mToken ) ;
+        } // else
+        
+      } // if
+      
+      walk = walk->mRightNode ;
+    } // While
+  
+    return value ;
   } // DivideF()
   
   CorrespondingTreePtr CommandNot( CorrespondingTreePtr head ) {
@@ -3686,8 +3780,8 @@ public:
     } // if
     else {
       
-      return ( atof( head->mToken->mToken ) >
-               atof( head->mRightNode->mToken->mToken ) ) &&
+      return ( atof( head->mLeftNode->mToken->mToken ) >
+               atof( head->mRightNode->mLeftNode->mToken->mToken ) ) &&
              CommandBiggerNum( head->mRightNode ) ;
     } // else
     
@@ -3700,8 +3794,8 @@ public:
     } // if
     else {
       
-      return ( atof( head->mToken->mToken ) >=
-               atof( head->mRightNode->mToken->mToken ) ) &&
+      return ( atof( head->mLeftNode->mToken->mToken ) >=
+               atof( head->mRightNode->mLeftNode->mToken->mToken ) ) &&
              CommandBiggerEqvNum( head->mRightNode ) ;
     } // else
     
@@ -3714,8 +3808,8 @@ public:
     } // if
     else {
       
-      return ( atof( head->mToken->mToken ) <
-               atof( head->mRightNode->mToken->mToken ) ) &&
+      return ( atof( head->mLeftNode->mToken->mToken ) <
+               atof( head->mRightNode->mLeftNode->mToken->mToken ) ) &&
              CommandSmallerNum( head->mRightNode ) ;
     } // else
     
@@ -3728,8 +3822,8 @@ public:
     } // if
     else {
       
-      return ( atof( head->mToken->mToken ) <=
-               atof( head->mRightNode->mToken->mToken ) ) &&
+      return ( atof( head->mLeftNode->mToken->mToken ) <=
+               atof( head->mRightNode->mLeftNode->mToken->mToken ) ) &&
              CommandSmallerEqvNum( head->mRightNode ) ;
     } // else
     
@@ -3742,8 +3836,8 @@ public:
     } // if
     else {
       
-      return ( atof( head->mToken->mToken ) ==
-               atof( head->mRightNode->mToken->mToken ) ) &&
+      return ( atof( head->mLeftNode->mToken->mToken ) ==
+               atof( head->mRightNode->mLeftNode->mToken->mToken ) ) &&
              CommandEqvNum( head->mRightNode ) ;
     } // else
     
@@ -3757,7 +3851,7 @@ public:
     
     CharPtr temp = NULL ;
     int len = 0 ;
-    while ( walk->mRightNode->mRightNode != NULL ) {
+    while ( walk->mRightNode != NULL ) {
       len = len + strlen( walk->mLeftNode->mToken->mToken ) ;
       temp = value->mToken->mToken ;
       value->mToken->mToken = new char[ len + 1 ] ;
@@ -3768,6 +3862,8 @@ public:
       
       strcat( value->mToken->mToken, walk->mLeftNode->mToken->mToken ) ;
       strcat( value->mToken->mToken, "\0" ) ;
+      
+      walk = walk->mRightNode ;
     } // while
     
     return value ;
@@ -3780,7 +3876,8 @@ public:
     } // if
     else {
       
-      return ( strcmp( head->mToken->mToken, head->mRightNode->mToken->mToken ) > 0 ) &&
+      return ( strcmp( head->mLeftNode->mToken->mToken,
+                       head->mRightNode->mLeftNode->mToken->mToken ) > 0 ) &&
              CommandBiggerString( head->mRightNode ) ;
     } // else
     
@@ -3793,7 +3890,8 @@ public:
     } // if
     else {
       
-      return ( strcmp( head->mToken->mToken, head->mRightNode->mToken->mToken ) < 0 ) &&
+      return ( strcmp( head->mLeftNode->mToken->mToken,
+                       head->mRightNode->mLeftNode->mToken->mToken ) < 0 ) &&
              CommandSmallerString( head->mRightNode ) ;
     } // else
     
@@ -3806,7 +3904,8 @@ public:
     } // if
     else {
       
-      return ( strcmp( head->mToken->mToken, head->mRightNode->mToken->mToken ) == 0 ) &&
+      return ( strcmp( head->mLeftNode->mToken->mToken,
+                       head->mRightNode->mLeftNode->mToken->mToken ) == 0 ) &&
              CommandSmallerString( head->mRightNode ) ;
     } // else
     
@@ -3878,16 +3977,9 @@ public:
         if ( a->mToken->mTokenType == SYMBOL ) {
           if ( b->mToken->mTokenType == SYMBOL ) {
             if ( needSameAddress ) {
-              if ( GetBinding( a->mToken ) ==
-                   GetBinding( b->mToken ) ) {
-                
-                return true ;
-              } // if
-              else {
-                
-                return false ;
-              } // else
               
+              return  GetBinding( a->mToken ) ==
+                      GetBinding( b->mToken ) ;
             } // if ( needSameAddress )
             else {
               bool temp = false ;
@@ -3918,7 +4010,7 @@ public:
               
             } // else
             
-          } // if
+          } // if ( b->mToken->mTokenType == SYMBOL )
           else {
             
             return false ;
@@ -4432,8 +4524,9 @@ public:
       } // else if ( mErrorVct->at( i ).mErrorType == NONFUNCTION )
       else if ( mErrorVct->at( i ).mErrorType == ARGTYPE ) {
         
-        cout << "ERROR (car with incorrect argument type) : "
-             << mErrorVct->at( i ).mToken << endl ;
+        cout << "ERROR (" << mErrorVct->at( i ).mToken
+             << " with incorrect argument type) : "
+             << mErrorVct->at( i ).mBinding->mToken->mToken << endl ;
       } // else if ( mErrorVct->at( i ).mErrorType == ARGTYPE )
       else if ( mErrorVct->at( i ).mErrorType == NOVALUE ) {
         
