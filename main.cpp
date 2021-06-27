@@ -1617,8 +1617,16 @@ public:
                   value = args ;
                 } // else if
                 else if ( strcmp( func->mToken, "car" ) == 0 )  {
-                  
                   value = CommandCar( args ) ;
+                  if ( value == NULL ) {
+                    
+                    return false ;
+                  } // if
+                  else {
+                    
+                    return true ;
+                  } // esle
+                  
                 } // else if
                 else if ( strcmp( func->mToken, "cdr" ) == 0 )  {
                   
@@ -3339,7 +3347,9 @@ public:
     if ( head->mLeftNode->mToken != NULL ) {
       Error temp ;
       temp.mErrorType = ARGTYPE ;
-      temp.mToken = head->mToken->mToken ;
+      temp.mBinding = head->mLeftNode ;
+      
+      mErrorVct->push_back( temp ) ;
       
       return NULL ;
     } // if ( head->mToken != NULL )
@@ -3354,7 +3364,9 @@ public:
     if ( head->mLeftNode->mToken != NULL ) {
       Error temp ;
       temp.mErrorType = ARGTYPE ;
-      temp.mToken = head->mToken->mToken ;
+      temp.mBinding = head->mLeftNode ;
+      
+      mErrorVct->push_back( temp ) ;
       
       return NULL ;
     } // if ( head->mLeftNode->mToken != NULL )
