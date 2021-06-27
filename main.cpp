@@ -1146,6 +1146,7 @@ public:
 class Parser {
   ErrorVctPtr mErrorVct ;
   SymbolVctPtr mSymbolVct ;
+  bool mNotEnd ;
   
 public:
   Parser() { // Constructor
@@ -1153,6 +1154,7 @@ public:
     mErrorVct->clear() ;
     mSymbolVct = new vector<Symbol> ;
     mSymbolVct->clear() ;
+    mNotEnd = true ;
         
     return ;
   } // Parser()
@@ -1639,7 +1641,9 @@ public:
                   CleanEnvironment() ;
                 } // if
                 else if ( strcmp( func->mToken, "exit" ) == 0 )  {
-                  ;
+                  CommandExit() ;
+                  
+                  return true ;
                 } // else if
                 else if ( strcmp( func->mToken, "cons" ) == 0 )  {
                   
@@ -2239,7 +2243,9 @@ public:
                     
                   } // if
                   else if ( strcmp( func->mToken, "exit" ) == 0 )  {
-                    ;
+                    CommandExit() ;
+                    
+                    return false ;
                   } // else if
                   else if ( strcmp( func->mToken, "cons" ) == 0 )  {
                     
@@ -2974,7 +2980,8 @@ public:
     else if ( strcmp( func->mToken, "exit" ) == 0 ) {
       if ( head->mRightNode != NULL &&
            head->mRightNode->mToken != NULL &&
-           head->mRightNode->mToken->mTokenType == NIL ) {
+           head->mRightNode->mToken->mTokenType == NIL &&
+           head->mRightNode->mRightNode == NULL ) {
         
         return true ;
       } // if
@@ -4612,12 +4619,20 @@ public:
     
   } // CommandCond()
   
+  void CommandExit() {
+    mNotEnd = false ;
+  } // CommandExit
+  
   // proceed
   void CleanEnvironment() {
     mSymbolVct->clear() ;
     
     return ;
   } // CleanEnvironment()
+  
+  bool NotEnd() {
+    return mNotEnd ;
+  } // NotEnd
   
   bool PlantCorrespondingTree( SExpressionPtr sExp, CorrespondingTreePtr & head ) {
     bool hasError = false ;
@@ -4980,17 +4995,16 @@ int main() {
   
   cin >> inputID ;
   
-  while ( notEnd && ! hasEof ) {    // not exit && not EOF
+  while ( parser.NotEnd() && ! hasEof ) {    // not exit && not EOF
     cout << endl << "> " ;
     
     if ( scanner.ReadSExp( sExpPtr ) ) {
       
-      notEnd = ! parser.IsExit( sExpPtr->mTokenString ) ;
-      if ( notEnd ) {
+      if ( parser.NotEnd() ) {
         if ( parser.PlantCorrespondingTree( sExpPtr, correspondingTreePtr ) ) {
           
           if ( parser.Eval( correspondingTreePtr, value, 0 ) ) {
-            if ( notEnd ) {
+            if ( parser.NotEnd() ) {
               // parser.CheckTree( correspondingTreePtr ) ;
               int space = 0 ;
               parser.PrintCorrespondingTree( value, space, true ) ; // pretty print
@@ -5009,7 +5023,7 @@ int main() {
       } // if
       
     } // if
-    else { // scanner has Error () )
+    else { // scanner has Error ()
       scanner.PrintError( hasEof ) ;
     } // else
       
