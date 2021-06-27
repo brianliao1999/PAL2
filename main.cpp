@@ -4621,7 +4621,7 @@ public:
   
   void CommandExit() {
     mNotEnd = false ;
-  } // CommandExit
+  } // CommandExit()
   
   // proceed
   void CleanEnvironment() {
@@ -4632,7 +4632,7 @@ public:
   
   bool NotEnd() {
     return mNotEnd ;
-  } // NotEnd
+  } // NotEnd()
   
   bool PlantCorrespondingTree( SExpressionPtr sExp, CorrespondingTreePtr & head ) {
     bool hasError = false ;
