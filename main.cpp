@@ -1288,6 +1288,8 @@ public:
       cout << endl ;
     } // if
     
+    token->mIsProcedure = false ;
+    
   } // PrintToken()
   
   void CheckTree( CorrespondingTreePtr head ) {
@@ -4863,6 +4865,11 @@ public:
     int len = mErrorVct->size() ;
     
     for ( int i = 0 ; i < len ; i++ ) {
+      
+      if ( mErrorVct->at( i ).mTokenPtr != NULL ) {
+        mErrorVct->at( i ).mTokenPtr->mIsProcedure = false ;
+      } // if
+      
       if ( mErrorVct->at( i ).mErrorType == UNBOUND ) {
         
         cout << "ERROR (unbound symbol) : " ;
