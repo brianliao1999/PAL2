@@ -1285,7 +1285,7 @@ public:
       printed = true ;
     } // else if
     
-    if ( printed & printEnter ) {
+    if ( printed && printEnter ) {
       cout << endl ;
     } // if
     
@@ -4794,8 +4794,9 @@ public:
       } // else if ( mErrorVct->at( i ).mErrorType == NONFUNCTION )
       else if ( mErrorVct->at( i ).mErrorType == ARGTYPE ) {
         
-        cout << "ERROR (" << mErrorVct->at( i ).mToken
-             << " with incorrect argument type) : " ;
+        cout << "ERROR (" ;
+        PrintToken( mErrorVct->at( i ).mTokenPtr, true ) ;
+        cout << " with incorrect argument type) : " ;
         PrintToken( mErrorVct->at( i ).mBinding->mToken, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == ARGTYPE )
       else if ( mErrorVct->at( i ).mErrorType == NOVALUE ) {
