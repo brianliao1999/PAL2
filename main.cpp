@@ -4621,6 +4621,7 @@ public:
   
   void CommandExit() {
     mNotEnd = false ;
+    cout << endl ;
   } // CommandExit()
   
   // proceed
