@@ -1445,20 +1445,7 @@ public:
           func = head->mLeftNode->mToken ;
         } // else
         
-        if ( userDefined ) { // didn't done yet!!!!!
-          CorrespondingTreePtr temp = new CorrespondingTree ;
-          temp->mToken = head->mLeftNode->mToken ;
-          char * tempC = temp->mToken->mToken ;
-          temp->mToken->mToken = new char[ strlen( tempC ) + 14 ] ;
-          strcat( temp->mToken->mToken, "#<procedure " ) ;
-          strcat( temp->mToken->mToken, tempC ) ;
-          strcat( temp->mToken->mToken, ">" ) ;
-          
-          value = temp ;
-          
-          return true ;
-        } // if
-        else if ( IsPrimitiveFunc( func ) ) {
+        if ( IsPrimitiveFunc( func ) ) {
           if ( level != 0 && ( strcmp( func->mToken, "clean-environment" ) == 0 ||
                                strcmp( func->mToken, "define" ) == 0 ||
                                strcmp( func->mToken, "exit" ) == 0 ) ) {
@@ -1469,6 +1456,19 @@ public:
             mErrorVct->push_back( temp ) ;
             
             return false ;
+          } // if
+          else if ( userDefined ) { // didn't done yet!!!!!
+            CorrespondingTreePtr temp = new CorrespondingTree ;
+            temp->mToken = head->mLeftNode->mToken ;
+            char * tempC = temp->mToken->mToken ;
+            temp->mToken->mToken = new char[ strlen( tempC ) + 14 ] ;
+            strcat( temp->mToken->mToken, "#<procedure " ) ;
+            strcat( temp->mToken->mToken, tempC ) ;
+            strcat( temp->mToken->mToken, ">" ) ;
+            
+            value = temp ;
+            
+            return true ;
           } // if
           else if ( strcmp( func->mToken, "define" ) == 0 )  {
             if ( CheckFormat( func, head ) ) { // right format
@@ -1619,18 +1619,38 @@ public:
                 else if ( strcmp( func->mToken, "car" ) == 0 )  {
                   value = CommandCar( args ) ;
                   if ( value == NULL ) {
+                    Error temp ;
+                    temp.mErrorType = ARGTYPE ;
+                    temp.mBinding = head->mRightNode->mLeftNode ;
+                    temp.mToken = func->mToken ;
+                    
+                    mErrorVct->push_back( temp ) ;
                     
                     return false ;
                   } // if
                   else {
                     
                     return true ;
-                  } // esle
+                  } // else
                   
                 } // else if
                 else if ( strcmp( func->mToken, "cdr" ) == 0 )  {
-                  
                   value = CommandCdr( args ) ;
+                  if ( value == NULL ) {
+                    Error temp ;
+                    temp.mErrorType = ARGTYPE ;
+                    temp.mBinding = head->mRightNode->mLeftNode ;
+                    temp.mToken = func->mToken ;
+                    
+                    mErrorVct->push_back( temp ) ;
+                    
+                    return false ;
+                  } // if
+                  else {
+                    
+                    return true ;
+                  } // else
+                  
                 } // else if
                 else if ( strcmp( func->mToken, "atom?" ) == 0 )  {
                   
@@ -2602,10 +2622,25 @@ public:
            head->mRightNode->mRightNode != NULL &&
            head->mRightNode->mRightNode->mLeftNode != NULL &&
            head->mRightNode->mRightNode->mRightNode != NULL &&
+           head->mRightNode->mRightNode->mRightNode->mToken != NULL &&
+           head->mRightNode->mRightNode->mRightNode->mToken->mTokenType == NIL &&
            head->mRightNode->mLeftNode->mToken != NULL &&
            head->mRightNode->mLeftNode->mToken->mTokenType == SYMBOL ) { // right format
+        if ( HasPrimitiveFunc( head->mRightNode->mLeftNode ) ) {
+          Error temp ;
+          temp.mErrorType = FORMAT ;
+          temp.mToken = func->mToken ;
+          temp.mBinding = head ;
+          
+          mErrorVct->push_back( temp ) ;
+          
+          return false ;
+        } // if
+        else {
+          
+          return true ;
+        } // else
         
-        return ! HasPrimitiveFunc( head->mRightNode->mLeftNode ) ;
       } // if
       else { // wrong format
         Error temp ;
@@ -2858,6 +2893,26 @@ public:
       } // else
       
     } // else if ( strcmp( func->mToken, "begin" ) == 0 )
+    // check --"exit"
+    // have arg = 0
+    else if ( strcmp( func->mToken, "exit" ) == 0 ) {
+      if ( head->mRightNode != NULL &&
+           head->mRightNode->mToken != NULL &&
+           head->mRightNode->mToken->mTokenType == NIL ) {
+        
+        return true ;
+      } // if
+      else {
+        Error temp ;
+        temp.mErrorType = ARGUMENTS ;
+        temp.mToken = func->mToken ;
+        
+        mErrorVct->push_back( temp ) ;
+        
+        return false ;
+      } // else
+      
+    } // else if
     else {
       cout << "not defined format." << endl ;
       
@@ -2971,8 +3026,20 @@ public:
       if ( head->mToken != NULL &&
            head->mToken->mTokenType == SYMBOL ) {
         if ( IsPrimitiveFunc( head->mToken ) ) {
+          if ( strcmp( head->mToken->mToken, "define" ) == 0 ) {
+            Error temp ;
+            temp.mErrorType = LEVEL ;
+            temp.mToken = head->mToken->mToken ;
+            
+            mErrorVct->push_back( temp ) ;
+            
+            return false ;
+          } // if
+          else {
+            
+            return true ;
+          } // else
           
-          return true ;
         } // if
         else if ( IsBound( head->mToken ) ) {
           
@@ -3082,6 +3149,7 @@ public:
               strcmp( head->mToken, "begin" ) == 0 ||
               strcmp( head->mToken, "if" ) == 0 ||
               strcmp( head->mToken, "cond" ) == 0 ||
+              strcmp( head->mToken, "exit" ) == 0 ||
               strcmp( head->mToken, "clean-environment" ) == 0 ) {
       
       return true ;
@@ -3345,11 +3413,6 @@ public:
   
   CorrespondingTreePtr CommandCar( CorrespondingTreePtr head ) {
     if ( head->mLeftNode->mToken != NULL ) {
-      Error temp ;
-      temp.mErrorType = ARGTYPE ;
-      temp.mBinding = head->mLeftNode ;
-      
-      mErrorVct->push_back( temp ) ;
       
       return NULL ;
     } // if ( head->mToken != NULL )
@@ -3362,14 +3425,9 @@ public:
   
   CorrespondingTreePtr CommandCdr( CorrespondingTreePtr head ) {
     if ( head->mLeftNode->mToken != NULL ) {
-      Error temp ;
-      temp.mErrorType = ARGTYPE ;
-      temp.mBinding = head->mLeftNode ;
-      
-      mErrorVct->push_back( temp ) ;
       
       return NULL ;
-    } // if ( head->mLeftNode->mToken != NULL )
+    } // if ( head->mToken != NULL )
     else {
       
       return head->mLeftNode->mRightNode ;
@@ -4642,7 +4700,7 @@ public:
         
         cout << "ERROR (level of " ;
         if ( mErrorVct->at( i ).mToken == "clean-environment" ) {
-          cout << "CLEAN-ENVIRONMENNT)" << endl ;
+          cout << "CLEAN-ENVIRONMENT)" << endl ;
         } // if
         else if ( mErrorVct->at( i ).mToken == "define" ) {
           cout << "DEFINE)" << endl ;
