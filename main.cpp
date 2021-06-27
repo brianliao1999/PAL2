@@ -1490,7 +1490,7 @@ public:
             
             return true ;
           } // if
-          else if ( strcmp( func->mToken, "define" ) == 0 && gInputID != 3 )  {
+          else if ( strcmp( func->mToken, "define" ) == 0 )  {
             if ( CheckFormat( func, head ) ) { // right format
               
               return Define( head->mRightNode->mLeftNode,
@@ -2093,7 +2093,7 @@ public:
               
               return false ;
             } // if
-            else if ( strcmp( func->mToken, "define" ) == 0 && gInputID != 3 )  {
+            else if ( strcmp( func->mToken, "define" ) == 0 )  {
               if ( CheckFormat( func, head ) ) { // right format
                 
                 return Define( head->mRightNode->mLeftNode,
@@ -3150,7 +3150,9 @@ public:
       if ( head->mToken != NULL &&
            head->mToken->mTokenType == SYMBOL ) {
         if ( IsPrimitiveFunc( head->mToken ) ) {
-          if ( strcmp( head->mToken->mToken, "define" ) == 0 ) {
+          if ( strcmp( head->mToken->mToken, "define" ) == 0 ||
+               strcmp( head->mToken->mToken, "exit" ) == 0 ||
+               strcmp( head->mToken->mToken, "clean-environment" ) == 0 ) {
             Error temp ;
             temp.mErrorType = LEVEL ;
             temp.mTokenPtr = head->mToken ;
@@ -4622,7 +4624,7 @@ public:
   void CommandExit() {
     mNotEnd = false ;
     cout << endl ;
-  } // CommandExit()
+  } // CommandExit() (define a ( + a 1 ) ) ( define a 3 )
   
   // proceed
   void CleanEnvironment() {
@@ -4972,14 +4974,13 @@ public:
 } ; // class parser
 
 // ---       general function  ---
-int gInputID ;
 
 int main() {
     
   Scanner scanner ;
   Parser parser ;
   
-  
+  int inputID ;
   
   bool notEnd = true ;
   bool hasEof = false ;
@@ -4995,7 +4996,7 @@ int main() {
   
   cout << "Welcome to OurScheme!" << endl ;
   
-  cin >> gInputID ;
+  cin >> inputID ;
   
   while ( parser.NotEnd() && ! hasEof ) {    // not exit && not EOF
     cout << endl << "> " ;
