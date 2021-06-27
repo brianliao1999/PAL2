@@ -1405,7 +1405,8 @@ public:
     } // else if
     // is a main S-expression
     else {
-      if ( NonList( head ) ) {
+      bool error = false ;
+      if ( NonList( head, level, error ) ) {
         Error temp ;
         temp.mErrorType = NONLIST ;
         temp.mBinding = head ;
@@ -2980,7 +2981,8 @@ public:
     else if ( strcmp( func->mToken, "exit" ) == 0 ) {
       if ( head->mRightNode != NULL &&
            head->mRightNode->mToken != NULL &&
-           head->mRightNode->mToken->mTokenType == NIL &&
+           ( head->mRightNode->mToken->mTokenType == NIL ||
+             head->mRightNode->mToken->mTokenType == SYMBOL ) &&
            head->mRightNode->mRightNode == NULL ) {
         
         return true ;
@@ -3287,7 +3289,7 @@ public:
     
   } // IsPrimitiveFunc()
   
-  bool NonList( CorrespondingTreePtr head ) {
+  bool NonList( CorrespondingTreePtr head, int level, bool & error ) {
     
     if ( head == NULL ) {
       cout << "why am I here ?" << endl ;
@@ -3310,6 +3312,29 @@ public:
           
           return false ;
         } // if
+        else if ( head->mToken->mTokenType == SYMBOL ) {
+          bool temp ;
+          error = false ;
+          CorrespondingTreePtr value = GetBindingAndEval( head->mToken, temp, error, level ) ;
+          if ( error ) {
+            value = NULL ;
+            
+            return true ;
+          } // if
+          else {
+            if ( value != NULL && value->mToken != NULL &&
+                 value->mToken->mTokenType == NIL ) {
+              
+              return false ;
+            } // if
+            else {
+              
+              return true ;
+            } // else
+            
+          } // else
+          
+        } // else if
         else {
           
           return true ;
@@ -3320,7 +3345,7 @@ public:
     } // else if
     else { // if ( head->mRightNode != NULL )
       
-      return NonList( head->mRightNode ) ;
+      return NonList( head->mRightNode, level, error ) ;
     } // else
     
   } // NonList()
