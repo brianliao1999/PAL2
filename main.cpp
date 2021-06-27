@@ -1328,7 +1328,10 @@ public:
   
   // up
   bool Eval( CorrespondingTreePtr head, CorrespondingTreePtr & value, int level ) {
-    
+    if ( head->mToken != NULL && head->mToken->mToken != NULL )
+      cout << head->mToken->mToken << endl ;
+    else
+      cout << "S-Exp" << endl ;
     // an atom but not a symbol ( not a S-Expression )
     if ( head->mToken != NULL && head->mToken->mTokenType != SYMBOL &&
          Scanner::IsAtom( head->mToken->mTokenType ) ) {
@@ -1401,7 +1404,7 @@ public:
         
         mErrorVct->push_back( temp ) ;
         
-        return false ;
+        return false ; //
       } // else if
       else if ( head->mLeftNode->mToken != NULL && ( head->mLeftNode->mToken->mTokenType == SYMBOL ||
                                                      head->mLeftNode->mToken->mTokenType == QUOTE ) ) {
@@ -1595,7 +1598,8 @@ public:
           else { // func is a known function
             if ( CheckFormat( func, head ) ) { // right format
               // proceed
-              if ( EvalArgs( head->mRightNode, level ) ) {
+              CorrespondingTreePtr args = NULL ;
+              if ( EvalArgs( head->mRightNode, args, level ) ) {
                 if ( strcmp( func->mToken, "clean-environment" ) == 0 ) {
                   cout << "environment cleaned" << endl ;
                   CleanEnvironment() ;
@@ -1605,62 +1609,62 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "cons" ) == 0 )  {
                   
-                  value = Cons( head->mRightNode->mLeftNode,
-                                head->mRightNode->mRightNode->mLeftNode ) ;
+                  value = Cons( args->mLeftNode,
+                                args->mRightNode->mLeftNode ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "list" ) == 0 )  {
                   
-                  value = head->mRightNode ;
+                  value = args ;
                 } // else if
                 else if ( strcmp( func->mToken, "car" ) == 0 )  {
                   
-                  value = CommandCar( head->mRightNode ) ;
+                  value = CommandCar( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "cdr" ) == 0 )  {
                   
-                  value = CommandCdr( head->mRightNode ) ;
+                  value = CommandCdr( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "atom?" ) == 0 )  {
                   
-                  value = CommandIsAtom( head->mRightNode ) ;
+                  value = CommandIsAtom( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "pair?" ) == 0 )  {
                   
-                  value = CommandIsPair( head->mRightNode ) ;
+                  value = CommandIsPair( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "list?" ) == 0 )  {
                   
-                  value = CommandIsList( head->mRightNode ) ;
+                  value = CommandIsList( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "null?" ) == 0 )  {
                   
-                  value = CommandIsNull( head->mRightNode ) ;
+                  value = CommandIsNull( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "real?" ) == 0 ||
                           strcmp( func->mToken, "number?" ) == 0 )  {
                   
-                  value = CommandIsNumber( head->mRightNode ) ;
+                  value = CommandIsNumber( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "integer?" ) == 0 )  {
                   
-                  value = CommandIsInteger( head->mRightNode ) ;
+                  value = CommandIsInteger( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "string?" ) == 0 )  {
                   
-                  value = CommandIsString( head->mRightNode ) ;
+                  value = CommandIsString( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "boolean?" ) == 0 )  {
                   
-                  value = CommandIsBoolean( head->mRightNode ) ;
+                  value = CommandIsBoolean( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "symbol?" ) == 0 )  {
                   
-                  value = CommandIsSymbol( head->mRightNode ) ;
+                  value = CommandIsSymbol( args ) ;
                 } // else if
                 else if ( strcmp( func->mToken, "+" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    value = CommandPlus( head->mRightNode, hasFloat ) ;
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    value = CommandPlus( args, hasFloat ) ;
                     
                     return true ;
                   } // if
@@ -1673,8 +1677,8 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "-" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    value = CommandMinus( head->mRightNode, hasFloat ) ;
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    value = CommandMinus( args, hasFloat ) ;
                     
                     return true ;
                   } // if
@@ -1687,8 +1691,8 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "*" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    value = CommandMulti( head->mRightNode, hasFloat ) ;
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    value = CommandMulti( args, hasFloat ) ;
                     
                     return true ;
                   } // if
@@ -1701,9 +1705,9 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "/" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
                     bool error = false ;
-                    value = CommandDivide( head->mRightNode, hasFloat, error ) ;
+                    value = CommandDivide( args, hasFloat, error ) ;
                     if ( error ) {
                       value = NULL ;
                       
@@ -1723,14 +1727,14 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "not" ) == 0 )  {
-                  value = CommandNot( head->mRightNode ) ;
+                  value = CommandNot( args ) ;
                   
                   return true ;
                 } // else if
                 else if ( strcmp( func->mToken, ">" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    if ( CommandBiggerNum( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    if ( CommandBiggerNum( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1754,8 +1758,8 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, ">=" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    if ( CommandBiggerEqvNum( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    if ( CommandBiggerEqvNum( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1779,8 +1783,8 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "<" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    if ( CommandSmallerNum( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    if ( CommandSmallerNum( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1804,8 +1808,8 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "<=" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    if ( CommandSmallerEqvNum( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    if ( CommandSmallerEqvNum( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1829,8 +1833,8 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "=" ) == 0 )  {
                   bool hasFloat = false ;
-                  if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                    if ( CommandEqvNum( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                    if ( CommandEqvNum( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1853,8 +1857,8 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string-append" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                    value = CommandStringAppend( head->mRightNode ) ;
+                  if ( CheckArgsTypeIsString( args, func ) ) {
+                    value = CommandStringAppend( args ) ;
                     
                     return true ;
                   } // if ( CheckArgsTypeIsString( head->mRightNode ) )
@@ -1865,8 +1869,8 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string>?" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                    if ( CommandBiggerString( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsString( args, func ) ) {
+                    if ( CommandBiggerString( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1889,8 +1893,8 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string<?" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                    if ( CommandSmallerString( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsString( args, func ) ) {
+                    if ( CommandSmallerString( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1913,8 +1917,8 @@ public:
                   
                 } // else if
                 else if ( strcmp( func->mToken, "string=?" ) == 0 )  {
-                  if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                    if ( CommandEqvString( head->mRightNode ) ) {
+                  if ( CheckArgsTypeIsString( args, func ) ) {
+                    if ( CommandEqvString( args ) ) {
                       value = new CorrespondingTree ;
                       value->mToken = new Token ;
                       value->mToken->mTokenType = T ;
@@ -1938,8 +1942,8 @@ public:
                 } // else if
                 else if ( strcmp( func->mToken, "equal?" ) == 0 )  {
                   bool error = false ;
-                  value = CommandEqual( head->mRightNode->mLeftNode,
-                                        head->mRightNode->mRightNode->mLeftNode,
+                  value = CommandEqual( args->mLeftNode,
+                                        args->mRightNode->mLeftNode,
                                         level, error ) ;
                   if ( error ) {
                     value = NULL ;
@@ -2141,7 +2145,8 @@ public:
             else { // func is a known function
               if ( CheckFormat( func, head ) ) { // right format
                 // proceed
-                if ( EvalArgs( head->mRightNode, level ) ) {
+                CorrespondingTreePtr args = NULL ;
+                if ( EvalArgs( head->mRightNode, args, level ) ) {
                   if ( strcmp( func->mToken, "clean-environment" ) == 0 ) {
                     CleanEnvironment() ;
                     cout << "environment cleaned" << endl ;
@@ -2152,62 +2157,62 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "cons" ) == 0 )  {
                     
-                    value = Cons( head->mRightNode->mLeftNode,
-                                  head->mRightNode->mRightNode->mLeftNode ) ;
+                    value = Cons( args->mLeftNode,
+                                  args->mRightNode->mLeftNode ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "list" ) == 0 )  {
                     
-                    value = head->mRightNode ;
+                    value = args ;
                   } // else if
                   else if ( strcmp( func->mToken, "car" ) == 0 )  {
                     
-                    value = CommandCar( head->mRightNode ) ;
+                    value = CommandCar( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "cdr" ) == 0 )  {
                     
-                    value = CommandCdr( head->mRightNode ) ;
+                    value = CommandCdr( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "atom?" ) == 0 )  {
                     
-                    value = CommandIsAtom( head->mRightNode ) ;
+                    value = CommandIsAtom( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "pair?" ) == 0 )  {
                     
-                    value = CommandIsPair( head->mRightNode ) ;
+                    value = CommandIsPair( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "list?" ) == 0 )  {
                     
-                    value = CommandIsList( head->mRightNode ) ;
+                    value = CommandIsList( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "null?" ) == 0 )  {
                     
-                    value = CommandIsNull( head->mRightNode ) ;
+                    value = CommandIsNull( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "real?" ) == 0 ||
                             strcmp( func->mToken, "number?" ) == 0 )  {
                     
-                    value = CommandIsNumber( head->mRightNode ) ;
+                    value = CommandIsNumber( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "integer?" ) == 0 )  {
                     
-                    value = CommandIsInteger( head->mRightNode ) ;
+                    value = CommandIsInteger( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "string?" ) == 0 )  {
                     
-                    value = CommandIsString( head->mRightNode ) ;
+                    value = CommandIsString( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "boolean?" ) == 0 )  {
                     
-                    value = CommandIsBoolean( head->mRightNode ) ;
+                    value = CommandIsBoolean( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "symbol?" ) == 0 )  {
                     
-                    value = CommandIsSymbol( head->mRightNode ) ;
+                    value = CommandIsSymbol( args ) ;
                   } // else if
                   else if ( strcmp( func->mToken, "+" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      value = CommandPlus( head->mRightNode, hasFloat ) ;
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      value = CommandPlus( args, hasFloat ) ;
                       
                       return true ;
                     } // if
@@ -2220,8 +2225,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "-" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      value = CommandMinus( head->mRightNode, hasFloat ) ;
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      value = CommandMinus( args, hasFloat ) ;
                       
                       return true ;
                     } // if
@@ -2234,8 +2239,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "*" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      value = CommandMulti( head->mRightNode, hasFloat ) ;
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      value = CommandMulti( args, hasFloat ) ;
                       
                       return true ;
                     } // if
@@ -2248,9 +2253,9 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "/" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
                       bool error = false ;
-                      value = CommandDivide( head->mRightNode, hasFloat, error ) ;
+                      value = CommandDivide( args, hasFloat, error ) ;
                       if ( error ) {
                         value = NULL ;
                         
@@ -2270,14 +2275,14 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "not" ) == 0 )  {
-                    value = CommandNot( head->mRightNode ) ;
+                    value = CommandNot( args ) ;
                     
                     return true ;
                   } // else if
                   else if ( strcmp( func->mToken, ">" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      if ( CommandBiggerNum( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      if ( CommandBiggerNum( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2291,7 +2296,7 @@ public:
                       } // else
                       
                       return true ;
-                    } // if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) )
+                    } // if ( CheckArgsTypeIsNumber( args, hasFloat ) )
                     else {
                       value = NULL ;
                       
@@ -2301,8 +2306,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, ">=" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      if ( CommandBiggerEqvNum( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      if ( CommandBiggerEqvNum( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2316,7 +2321,7 @@ public:
                       } // else
                       
                       return true ;
-                    } // if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) )
+                    } // if ( CheckArgsTypeIsNumber( args, hasFloat ) )
                     else {
                       value = NULL ;
                       
@@ -2326,8 +2331,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "<" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      if ( CommandSmallerNum( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      if ( CommandSmallerNum( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2341,7 +2346,7 @@ public:
                       } // else
                       
                       return true ;
-                    } // if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) )
+                    } // if ( CheckArgsTypeIsNumber( args, hasFloat ) )
                     else {
                       value = NULL ;
                       
@@ -2351,8 +2356,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "<=" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      if ( CommandSmallerEqvNum( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      if ( CommandSmallerEqvNum( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2366,7 +2371,7 @@ public:
                       } // else
                       
                       return true ;
-                    } // if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) )
+                    } // if ( CheckArgsTypeIsNumber( args, hasFloat ) )
                     else {
                       value = NULL ;
                       
@@ -2376,8 +2381,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "=" ) == 0 )  {
                     bool hasFloat = false ;
-                    if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat, func ) ) {
-                      if ( CommandEqvNum( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsNumber( args, hasFloat, func ) ) {
+                      if ( CommandEqvNum( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2391,7 +2396,7 @@ public:
                       } // else
                       
                       return true ;
-                    } // if ( CheckArgsTypeIsNumber( head->mRightNode, hasFloat ) )
+                    } // if ( CheckArgsTypeIsNumber( args, hasFloat ) )
                     else {
                       value = NULL ;
                       
@@ -2400,11 +2405,11 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string-append" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                      value = CommandStringAppend( head->mRightNode ) ;
+                    if ( CheckArgsTypeIsString( args, func ) ) {
+                      value = CommandStringAppend( args ) ;
                       
                       return true ;
-                    } // if ( CheckArgsTypeIsString( head->mRightNode ) )
+                    } // if ( CheckArgsTypeIsString( args ) )
                     else {
                       
                       return false ;
@@ -2412,8 +2417,8 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string>?" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                      if ( CommandBiggerString( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsString( args, func ) ) {
+                      if ( CommandBiggerString( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2436,8 +2441,8 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string<?" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                      if ( CommandSmallerString( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsString( args, func ) ) {
+                      if ( CommandSmallerString( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2460,8 +2465,8 @@ public:
                     
                   } // else if
                   else if ( strcmp( func->mToken, "string=?" ) == 0 )  {
-                    if ( CheckArgsTypeIsString( head->mRightNode, func ) ) {
-                      if ( CommandEqvString( head->mRightNode ) ) {
+                    if ( CheckArgsTypeIsString( args, func ) ) {
+                      if ( CommandEqvString( args ) ) {
                         value = new CorrespondingTree ;
                         value->mToken = new Token ;
                         value->mToken->mTokenType = T ;
@@ -2485,8 +2490,8 @@ public:
                   } // else if
                   else if ( strcmp( func->mToken, "equal?" ) == 0 )  {
                     bool error = false ;
-                    value = CommandEqual( head->mRightNode->mLeftNode,
-                                          head->mRightNode->mRightNode->mLeftNode,
+                    value = CommandEqual( args->mLeftNode,
+                                          args->mRightNode->mLeftNode,
                                           level, error ) ;
                     if ( error ) {
                       value = NULL ;
@@ -2545,23 +2550,24 @@ public:
   } // Eval()
   // down
   
-  bool EvalArgs( CorrespondingTreePtr head, int level ) {
+  bool EvalArgs( CorrespondingTreePtr head, CorrespondingTreePtr & args, int level ) {
     CorrespondingTreePtr value = NULL ;
+    args = new CorrespondingTree ;
     if ( head->mToken != NULL && head->mToken->mTokenType == NIL ) {
       
       return true ;
     } // if
     
     if ( Eval( head->mLeftNode, value, level + 1 ) ) {
-      head->mLeftNode = value ;
+      args->mLeftNode = value ;
       value = NULL ;
       if ( head->mRightNode->mRightNode != NULL ) {
         
-        return EvalArgs( head->mRightNode, level ) ;
+        return EvalArgs( head->mRightNode, args->mRightNode, level ) ;
       } // if
       else {
         if ( Eval( head->mRightNode, value, level + 1 ) ) {
-          head->mRightNode = value ;
+          args->mRightNode = value ;
           
           return  true ;
         } // if
@@ -3149,7 +3155,7 @@ public:
   } // ReplaceSymbol()
   
   void Replace( TokenPtr symbol, CorrespondingTreePtr symbolBinding,
-               CorrespondingTreePtr & head ) {
+                CorrespondingTreePtr & head ) {
     if ( head == NULL ) {
       
       return ;
