@@ -1328,10 +1328,7 @@ public:
   
   // up
   bool Eval( CorrespondingTreePtr head, CorrespondingTreePtr & value, int level ) {
-    if ( head->mToken != NULL && head->mToken->mToken != NULL )
-      cout << head->mToken->mToken << endl ;
-    else
-      cout << "S-Exp" << endl ;
+    
     // an atom but not a symbol ( not a S-Expression )
     if ( head->mToken != NULL && head->mToken->mTokenType != SYMBOL &&
          Scanner::IsAtom( head->mToken->mTokenType ) ) {
