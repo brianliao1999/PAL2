@@ -4795,7 +4795,7 @@ public:
       else if ( mErrorVct->at( i ).mErrorType == ARGTYPE ) {
         
         cout << "ERROR (" ;
-        PrintToken( mErrorVct->at( i ).mTokenPtr, true ) ;
+        PrintToken( mErrorVct->at( i ).mTokenPtr, false ) ;
         cout << " with incorrect argument type) : " ;
         PrintToken( mErrorVct->at( i ).mBinding->mToken, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == ARGTYPE )
