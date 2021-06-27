@@ -1757,6 +1757,11 @@ public:
                     value = CommandDivide( args, hasFloat, error ) ;
                     if ( error ) {
                       value = NULL ;
+                      Error temp ;
+                      temp.mErrorType = DIVIDEBYZERO ;
+                      temp.mTokenPtr = func ;
+                      
+                      mErrorVct->push_back( temp ) ;
                       
                       return false ;
                     } // if
@@ -3074,7 +3079,7 @@ public:
         else {
           Error temp ;
           temp.mErrorType = ARGTYPE ;
-          temp.mBinding = head ;
+          temp.mBinding = head->mLeftNode ;
           temp.mTokenPtr = func ;
           
           mErrorVct->push_back( temp ) ;
@@ -4216,6 +4221,41 @@ public:
   
   CorrespondingTreePtr CommandEqv( CorrespondingTreePtr a, CorrespondingTreePtr b,
                                    int level, bool & error ) {
+    
+    CorrespondingTreePtr valueA = NULL ;
+    if ( Eval( a, valueA, level ) ) {
+      CorrespondingTreePtr valueB = NULL ;
+      if ( Eval( b, valueB, level ) ) {
+        if ( valueA == valueB ) {
+          CorrespondingTreePtr t = new CorrespondingTree ;
+          t->mToken = new Token ;
+          t->mToken->mTokenType = T ;
+          
+          return t ;
+        } // if
+        else {
+          CorrespondingTreePtr nil = new CorrespondingTree ;
+          nil->mToken = new Token ;
+          nil->mToken->mTokenType = NIL ;
+          
+          return nil ;
+        } // else
+        
+      } // if
+      else {
+        error = true ;
+        
+        return NULL ;
+      } // else
+      
+    } // if
+    else {
+      error = true ;
+      
+      return NULL ;
+    } // else
+    
+    /*
     if ( SameTree( a, b, true, level, error ) ) {
       CorrespondingTreePtr t = new CorrespondingTree ;
       t->mToken = new Token ;
@@ -4230,7 +4270,7 @@ public:
       
       return nil ;
     } // else
-    
+    */
   } // CommandEqv()
   
   CorrespondingTreePtr CommandEqual( CorrespondingTreePtr a, CorrespondingTreePtr b,
@@ -4844,6 +4884,11 @@ public:
         cout << "ERROR (no return value) : " ;
         PrintCorrespondingTree( mErrorVct->at( i ).mBinding, 0, true ) ;
       } // else if ( mErrorVct->at( i ).mErrorType == NOVALUE )
+      else if ( mErrorVct->at( i ).mErrorType == DIVIDEBYZERO ) {
+        
+        cout << "ERROR (division by zero) : " ;
+        PrintToken( mErrorVct->at( i ).mTokenPtr, true ) ;
+      } // else if
       else {
         
         cout << "should not be here !(printError)" << endl ;
