@@ -3749,12 +3749,13 @@ public:
   } // CommandIsPair()
   
   CorrespondingTreePtr CommandIsNull( CorrespondingTreePtr head ) {
+  	
     if ( head->mLeftNode->mToken != NULL &&
          head->mLeftNode->mToken->mTokenType == NIL ) {
       CorrespondingTreePtr t = new CorrespondingTree ;
       t->mToken = new Token ;
       t->mToken->mTokenType = T ;
-      
+    
       return t ;
     } // if ( head->mToken != NULL )
     else {
@@ -4184,9 +4185,13 @@ public:
     CharPtr temp = NULL ;
     int len = 0 ;
     while ( walk->mRightNode != NULL ) {
+    
       len = len + strlen( walk->mLeftNode->mToken->mToken ) ;
       temp = value->mToken->mToken ;
-      value->mToken->mToken = new char[ len + 1 ] ;
+      value->mToken->mToken = NULL ;
+      value->mToken->mToken = new char[ len + 10 ] ;
+      value->mToken->mToken[0] = '\0' ;
+      
       if ( temp != NULL ) {
         strcat( value->mToken->mToken, temp ) ;
       } // if
@@ -4195,7 +4200,7 @@ public:
       strcat( value->mToken->mToken, "\0" ) ;
       
       walk = walk->mRightNode ;
-    } // while
+    } // while 
     
     return value ;
   } // CommandStringAppend()
@@ -5001,6 +5006,7 @@ int main() {
         if ( parser.PlantCorrespondingTree( sExpPtr, correspondingTreePtr ) ) {
           
           if ( parser.Eval( correspondingTreePtr, value, 0 ) ) {
+          	
             if ( parser.NotEnd() ) {
               // parser.CheckTree( correspondingTreePtr ) ;
               int space = 0 ;
