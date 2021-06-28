@@ -224,7 +224,7 @@ public:
     } // if
     else {
       mLine = 1 ;
-    } // else (  )
+    } // else
     
     return ! error ;
   } // ReadSExp()
@@ -1956,7 +1956,7 @@ public:
                       value->mToken = new Token ;
                       value->mToken->mTokenType = NIL ;
                       
-                    } // else
+                    } // else   
                     
                     return true ;
                   } // if
@@ -4189,7 +4189,6 @@ public:
       value->mToken->mToken = new char[ len + 1 ] ;
       if ( temp != NULL ) {
         strcat( value->mToken->mToken, temp ) ;
-        temp = NULL ;
       } // if
       
       strcat( value->mToken->mToken, walk->mLeftNode->mToken->mToken ) ;
